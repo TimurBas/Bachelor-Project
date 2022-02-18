@@ -1,2 +1,3 @@
-# BachelorProject
-Bachelor Project in Polymorphic Type Inference
+# 📌 Overview
+
+This project is all about the topic *Polymorphic Type Inference*.
