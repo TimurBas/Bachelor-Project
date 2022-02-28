@@ -1,7 +1,13 @@
 open Src
 
-module T = Test
+module A = Ast
+module T = Types
 
-let () =
-  let result = T.add 2 3 in
-  print_endline (string_of_int result)
+let polymorphic_id_example = A.Let{id = "id"; 
+                                   e1 = A.Lambda{id = "x"; e1 = A.Var"x"};
+                                   e2 = A.Var "id"}
+
+(* let rec W gamma exp =  match exp with 
+  | ... 
+
+in W init_gamma exp *)
