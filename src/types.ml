@@ -1,11 +1,14 @@
-type tau = 
+type typ = 
 | TyCon of string
 | TyVar of string 
-| TyFunApp of {tau1: string; tau2: string}
-| TyTuple of {tau1: string; tau2: string}
+| TyFunApp of {t1: string; t2: string}
+| TyTuple of {t1: string; t2: string}
 
 type typescheme = 
-| Type of tau 
-| TypeScheme of {tyvars: tau.TyVar; tau: tau}   
+| Type of typ 
+| TypeScheme of {tyvar: string; typescheme: typescheme}   
+
+type typescheme_compact = 
+| CompactTypeScheme of {tyvars: string list; typ: typ}
 
 type program_variable = string
