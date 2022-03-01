@@ -1,14 +1,12 @@
 type typ = 
 | TyCon of string
 | TyVar of string 
-| TyFunApp of {t1: string; t2: string}
-| TyTuple of {t1: string; t2: string}
+| TyFunApp of {t1: typ; t2: typ}
+| TyTuple of {t1: typ; t2: typ}
 
 type typescheme = 
-| Type of typ 
-| TypeScheme of {tyvar: string; typescheme: typescheme}   
+| TypeScheme of {tyvars: string list; tau: typ}  
 
-type typescheme_compact = 
-| CompactTypeScheme of {tyvars: string list; typ: typ}
+(* type types = Type of typ | TypeScheme of typescheme *)
 
 type program_variable = string
