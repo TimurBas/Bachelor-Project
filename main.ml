@@ -97,6 +97,18 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
     | _ -> raise Fail
   in trav TE.empty exp
 
+
 let () = 
+  print_newline(); 
+  print_string "Let_example \n";
   let (_, tau) = algorithm_w let_example in 
-  print_string (PR.pretty_print_typescheme tau)
+  print_string (PR.print_tau tau); 
+  print_newline();
+  print_string "Non_polymporphic_id_example \n";
+  let (_, tau) = algorithm_w non_polymporphic_id_example in 
+  print_string (PR.print_tau tau);
+  print_newline(); 
+  print_string "Polymorphic_id_example \n";
+  let (_, tau) = algorithm_w polymorphic_id_example in 
+  print_string (PR.print_tau tau); 
+  print_newline(); 
