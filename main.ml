@@ -28,6 +28,24 @@ let let_example =
       e1 = A.Lambda{id="x"; e1 = A.Var "both"};
       e2 = A.Tuple{e1=A.Var "amk"; e2=A.Var "amk"}}}}
 
+let fun_application_example = 
+  A.Lambda {id = "x"; e1 = A.Lambda {id = "y"; e1 = A.App {e1 = A.Var "x"; e2 = A.Var "y"}}}
+
+let fun_application_three_example = 
+  A.Lambda {id = "x"; e1 = A.Lambda {id = "y"; e1 = A.Lambda {id = "z"; e1 = A.App {e1 = A.Var "z"; e2 = A.App {e1 = A.Var "x"; e2 = A.Var "y"}}}}}
+
+let big_small_ass_example = 
+  A.Lambda {id = "x"; e1 =
+    A.Let {
+      id = "y"; 
+      e1 = A.App {e1 = A.Lambda{id = "w"; e1 = A.Var "w"}; e2 = A.Var "x"};
+      e2 = A.Lambda {id = "u";
+                     e1 = A.Lambda {id = "z"; 
+                                    e1 = A.Tuple {e1 = A.App {e1 = A.Var "y"; 
+                                                              e2 = A.Var "u"}; 
+                                                              e2 = A.App {e1 = A.Var "y"; 
+                                                                          e2 = A.Var "z"}}}}}}
+
 let set_difference lst1 lst2 = List.filter (fun e -> not (List.mem e lst2)) lst1
 
 let rec find_tyvars (tau: T.typ): T.tyvar list = match tau with 
@@ -52,12 +70,32 @@ let get_next_tyvar () =
   counter := (!counter) + 1;
   !counter
 
-(* let unify ((typ: T.typ), (T.TyFunApp{t1; t2})): S.map_type = raise Fail *)
+let rec unify (t1, t2) subst: S.map_type = 
+  match t1, t2 with 
+    | T.TyCon _ , T.TyCon _ -> subst
+    | T.TyFunApp {t1 = t11; t2 = t12}, T.TyFunApp{t1 = t21; t2 = t22} -> 
+        S.union (fun _ a _ -> Some a) (unify (t11, t21) subst) (unify (t12, t22) subst)
+    | T.TyTuple {t1 = t11; t2 = t12}, T.TyTuple {t1 = t21; t2 = t22} -> 
+        S.union (fun _ a _ -> Some a) (unify (t11, t21) subst) (unify (t12, t22) subst)
+    | T.TyVar ty_var1, T.TyVar ty_var2 -> 
+        if ty_var1 = ty_var2 then subst else S.add ty_var1 (TyVar ty_var2) subst
+    | T.TyVar ty_var, t2 -> 
+        let t2_tyvars = find_tyvars t2 in 
+        if List.exists (fun ty_var' -> ty_var = ty_var') t2_tyvars
+          then raise (FailMessage "Recursive unification")
+          else S.add ty_var t2 subst
+    | t1, T.TyVar ty_var ->
+      let t1_tyvars = find_tyvars t1 in 
+        if List.exists (fun ty_var' -> ty_var = ty_var') t1_tyvars
+          then raise (FailMessage "Recursive unification")
+          else S.add ty_var t1 subst
+    | _ -> raise (FailMessage "Failed unification")
 
 let algorithm_w (exp: A.exp): S.map_type * T.typ = 
   let rec trav (gamma: TE.map_type) exp: S.map_type * T.typ =
     match exp with 
-    | A.Var id -> (
+    | A.Var id -> 
+      (
         match TE.look_up id gamma with 
           | Some TypeScheme{tyvars; tau} -> 
             let new_tyvars = List.map (fun _ -> get_next_tyvar()) tyvars in
@@ -66,7 +104,7 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
                 S.add tv (T.TyVar new_tv) s) S.empty new_tyvars tyvars in 
             (S.empty, S.apply new_subst tau)
           | None -> raise Fail
-    )
+      )
     | A.Lambda {id; e1} -> 
         let new_tyvar = get_next_tyvar() in
         let (s, tau) = trav (TE.add_alpha id (TyVar new_tyvar) gamma) e1 in 
@@ -76,12 +114,12 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
             | None -> T.TyVar new_tyvar
         in 
         (s, TyFunApp {t1 = tau'; t2 = tau})
-    (* | A.App {e1; e2} -> 
+    | A.App {e1; e2} -> 
         let (s1, tau1) = trav gamma e1 in 
         let (s2, tau2) = trav (S.apply_to_gamma s1 gamma) e2 in
         let new_tyvar = get_next_tyvar() in 
-        let s3 = unify (S.apply s2 tau1, T.TyFunApp{t1=tau2; t2=TyVar new_tyvar}) in  
-        raise Fail *)
+        let s3 = unify (S.apply s2 tau1, T.TyFunApp{t1=tau2; t2=TyVar new_tyvar}) S.empty in  
+        (S.compose s3 (S.compose s2 s1), S.apply s3 (TyVar new_tyvar))
     | A.Let {id; e1; e2} -> 
         let (s1, tau1) = trav gamma e1 in 
         let s1_gamma = S.apply_to_gamma s1 gamma in
@@ -94,9 +132,7 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
         let (s1, tau1) = trav gamma e1 in 
         let (s2, tau2) = trav gamma e2 in 
         (S.compose s2 s1, TyTuple {t1 = tau1; t2 = tau2})
-    | _ -> raise Fail
   in trav TE.empty exp
-
 
 let () = 
   print_newline(); 
@@ -111,4 +147,16 @@ let () =
   print_string "Polymorphic_id_example \n";
   let (_, tau) = algorithm_w polymorphic_id_example in 
   print_string (PR.print_tau tau); 
+  print_newline();
+  print_string "Function application example \n";
+  let (_, tau) = algorithm_w fun_application_example in 
+  print_string (PR.print_tau tau); 
   print_newline(); 
+  print_string "Fun_application_three_example \n";
+  let (_, tau) = algorithm_w fun_application_three_example in 
+  print_string (PR.print_tau tau);
+  print_newline();
+  print_string "Big_ass_small example \n";
+  let (_, tau) = algorithm_w big_small_ass_example in 
+  print_string (PR.print_tau tau);
+  print_newline() 

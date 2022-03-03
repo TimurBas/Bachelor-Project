@@ -26,30 +26,8 @@ let apply t typ: typ =
       | TyTuple {t1; t2} -> TyTuple {t1=find_type_rec t1; t2=find_type_rec t2}
   in
   find_type_rec typ
-
 let apply_to_typescheme t (TypeScheme{tyvars; tau}) = TypeScheme{tyvars; tau=apply t tau}
-
 let apply_to_gamma t gamma = TE.map (apply_to_typescheme t) gamma
-
-(*S: TyVar -> Type*)
 let map m (t: map_type) = Substitution.map m t
-let compose (s1: map_type) (s2: map_type) = map (fun v -> apply s2 v) s1
-
-  (*         (
-          let new_typ = look_up tv t in
-          match new_typ with 
-            | Some new_typ' -> [new_typ']
-            | None -> [typ']
-        )
-  *)
-
-
-
-(* let merge lst1 lst2: map_type = Substitution.merge 
-(
-  fun k xo yo -> 
-    match xo, yo with 
-      | Some x, Some y -> Some (x+y)
-      | None, yo -> yo
-      | xo, None -> xo
-) lst1 lst2 *)
+let union a b c = Substitution.union a b c
+let compose (s1: map_type) (s2: map_type) = union (fun _ a _ -> Some a) s1 (map (fun v -> apply s1 v) s2)
