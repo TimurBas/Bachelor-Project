@@ -5,46 +5,11 @@ module T = Types
 module TE = TypeEnv
 module S = Substitution
 module PR = PrettyPrinter
+module EX = Examples
 
 exception Fail
 exception Impossible
 exception FailMessage of string
-let non_polymporphic_id_example = A.Lambda {id = "x"; e1 = A.Lambda {id = "y"; e1 = A.Lambda {id = "z"; e1 = Var "z"}}}
-
-let polymorphic_id_example = A.Let {id = "id"; 
-                                   e1 = A.Lambda {id = "x"; e1 = A.Var "x"};
-                                   e2 = A.Var "id"}
-
-let let_example = 
-  A.Let {
-  id = "id";
-  e1 = A.Lambda{id = "x"; e1 = A.Var "x"};
-  e2 = 
-    A.Let{
-    id = "both";
-    e1 =A.Lambda{id = "y"; e1 = A.Lambda{id="z"; e1= A.Var "id"}}; 
-    e2= A.Let{
-      id = "amk"; 
-      e1 = A.Lambda{id="x"; e1 = A.Var "both"};
-      e2 = A.Tuple{e1=A.Var "amk"; e2=A.Var "amk"}}}}
-
-let fun_application_example = 
-  A.Lambda {id = "x"; e1 = A.Lambda {id = "y"; e1 = A.App {e1 = A.Var "x"; e2 = A.Var "y"}}}
-
-let fun_application_three_example = 
-  A.Lambda {id = "x"; e1 = A.Lambda {id = "y"; e1 = A.Lambda {id = "z"; e1 = A.App {e1 = A.Var "z"; e2 = A.App {e1 = A.Var "x"; e2 = A.Var "y"}}}}}
-
-let big_small_ass_example = 
-  A.Lambda {id = "x"; e1 =
-    A.Let {
-      id = "y"; 
-      e1 = A.App {e1 = A.Lambda{id = "w"; e1 = A.Var "w"}; e2 = A.Var "x"};
-      e2 = A.Lambda {id = "u";
-                     e1 = A.Lambda {id = "z"; 
-                                    e1 = A.Tuple {e1 = A.App {e1 = A.Var "y"; 
-                                                              e2 = A.Var "u"}; 
-                                                              e2 = A.App {e1 = A.Var "y"; 
-                                                                          e2 = A.Var "z"}}}}}}
 
 let set_difference lst1 lst2 = List.filter (fun e -> not (List.mem e lst2)) lst1
 
@@ -137,26 +102,26 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
 let () = 
   print_newline(); 
   print_string "Let_example \n";
-  let (_, tau) = algorithm_w let_example in 
+  let (_, tau) = algorithm_w EX.let_example in 
   print_string (PR.print_tau tau); 
   print_newline();
   print_string "Non_polymporphic_id_example \n";
-  let (_, tau) = algorithm_w non_polymporphic_id_example in 
+  let (_, tau) = algorithm_w EX.non_polymporphic_id_example in 
   print_string (PR.print_tau tau);
   print_newline(); 
   print_string "Polymorphic_id_example \n";
-  let (_, tau) = algorithm_w polymorphic_id_example in 
+  let (_, tau) = algorithm_w EX.polymorphic_id_example in 
   print_string (PR.print_tau tau); 
   print_newline();
   print_string "Function application example \n";
-  let (_, tau) = algorithm_w fun_application_example in 
+  let (_, tau) = algorithm_w EX.fun_application_example in 
   print_string (PR.print_tau tau); 
   print_newline(); 
   print_string "Fun_application_three_example \n";
-  let (_, tau) = algorithm_w fun_application_three_example in 
+  let (_, tau) = algorithm_w EX.fun_application_three_example in 
   print_string (PR.print_tau tau);
   print_newline();
   print_string "Big_ass_small example \n";
-  let (_, tau) = algorithm_w big_small_ass_example in 
+  let (_, tau) = algorithm_w EX.big_small_ass_example in 
   print_string (PR.print_tau tau);
   print_newline() 
