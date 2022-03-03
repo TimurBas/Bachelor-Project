@@ -23,27 +23,10 @@ let let_example =
     A.Let{
     id = "both";
     e1 =A.Lambda{id = "y"; e1 = A.Lambda{id="z"; e1= A.Var "id"}}; 
-    e2=A.Let{
+    e2= A.Let{
       id = "amk"; 
       e1 = A.Lambda{id="x"; e1 = A.Var "both"};
-      e2 = A.Var "amk"}}}
-                     
-(* let init_tyvars: string list =
-[
-   "a"; "b"; "c"; "d"; "e"; "f"; "g"; "h"; "i"; "j"; "k"; "l"; "m";
-   "n"; "o"; "p"; "q"; "r"; "s"; "t"; "u"; "v"; "w"; "x"; "y"; "z"
-]
-
-let remove_tyvar tyvars tyvar = 
-  let filtered_tyvars = List.filter (fun c -> not(c = tyvar)) !tyvars in 
-  if filtered_tyvars = !tyvars then raise (FailMessage "could not remove tyvar because it didn't exist") else tyvars := filtered_tyvars
-
-let get_tyvar (tyvars: string list) = 
-  List.hd tyvars *)
-
-(* let map_tyvar_to_new_tyvar tyvars old_tyvar = 
-  remove_tyvar tyvars old_tyvar; 
-  get_tyvar !tyvars *)
+      e2 = A.Tuple{e1=A.Var "amk"; e2=A.Var "amk"}}}}
 
 let set_difference lst1 lst2 = List.filter (fun e -> not (List.mem e lst2)) lst1
 
@@ -69,7 +52,7 @@ let get_next_tyvar () =
   counter := (!counter) + 1;
   !counter
 
-let unify ((typ: T.typ), (T.TyFunApp{t1; t2})): S.map_type = raise Fail
+(* let unify ((typ: T.typ), (T.TyFunApp{t1; t2})): S.map_type = raise Fail *)
 
 let algorithm_w (exp: A.exp): S.map_type * T.typ = 
   let rec trav (gamma: TE.map_type) exp: S.map_type * T.typ =
@@ -92,38 +75,28 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
             | Some typ -> typ
             | None -> T.TyVar new_tyvar
         in 
-        (s, T.TyFunApp {t1 = tau'; t2 = tau})
-    | A.App {e1; e2} -> 
+        (s, TyFunApp {t1 = tau'; t2 = tau})
+    (* | A.App {e1; e2} -> 
         let (s1, tau1) = trav gamma e1 in 
         let (s2, tau2) = trav (S.apply_to_gamma s1 gamma) e2 in
         let new_tyvar = get_next_tyvar() in 
         let s3 = unify (S.apply s2 tau1, T.TyFunApp{t1=tau2; t2=TyVar new_tyvar}) in  
-        raise Fail
+        raise Fail *)
     | A.Let {id; e1; e2} -> 
         let (s1, tau1) = trav gamma e1 in 
         let s1_gamma = S.apply_to_gamma s1 gamma in
         let clos_s1_gamma_tau = clos s1_gamma (TE.wrap_monotype tau1) in 
         let gamma_ext = TE.add id clos_s1_gamma_tau gamma in
         let s1_gamma_ext = S.apply_to_gamma s1 gamma_ext in
-         
         let (s2, tau2) = trav s1_gamma_ext e2 in 
         (S.compose s2 s1, tau2)
-in trav TE.empty exp
+    | A.Tuple {e1; e2} -> 
+        let (s1, tau1) = trav gamma e1 in 
+        let (s2, tau2) = trav gamma e2 in 
+        (S.compose s2 s1, TyTuple {t1 = tau1; t2 = tau2})
+    | _ -> raise Fail
+  in trav TE.empty exp
 
 let () = 
   let (_, tau) = algorithm_w let_example in 
   print_string (PR.pretty_print_typescheme tau)
-
-
-(*
-let gammas_bindings = TE.bindings gamma in
-        let gammas_bindings_types = List.map (fun (a, T.TypeScheme{tau; _}) -> a, tau) gammas_bindings in 
-        let new_gammas_bindings_types = List.map (fun (pv, typ) -> pv, S.apply s1 typ) gammas_bindings_types in 
-        let s1gamma = List.fold_left (fun gamma' (pv, typ) ->
-                                        TE.add pv (T.TypeScheme{tyvars=[]; tau=typ}) gamma'
-                                      ) TE.empty new_gammas_bindings_types
-        in 
-*)
-
-        (* let s1_gamma = TE.map (fun (TypeScheme{tyvars; tau}) -> T.TypeScheme{tyvars; tau=S.apply s1 tau}) gamma in *)
-        (* let s1_gamma = TE.map (S.apply_to_typescheme s1) gamma in *)
