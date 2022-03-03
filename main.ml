@@ -14,6 +14,8 @@ let non_polymporphic_id_example = A.Lambda {id = "x"; e1 = A.Lambda {id = "y"; e
 let polymorphic_id_example = A.Let {id = "id"; 
                                    e1 = A.Lambda {id = "x"; e1 = A.Var "x"};
                                    e2 = A.Var "id"}
+
+let amk = A.Let {id = "id"; e1 = A.Lambda{id = "x"; e1 = A.Var "x"}; e2 = A.Let{id = "both"; e1 =A.Lambda{id = "y"; e1 = A.Lambda{id="z"; e1= A.Var "id"}}; e2=A.Var "both"}}
                      
 (* let init_tyvars: string list =
 [
@@ -79,13 +81,32 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
         in 
         (s, T.TyFunApp {t1 = tau'; t2 = tau})
     (* | A.App {e1; e2} -> raise Fail *)
-    (* | A.Let {id; e1; e2} -> 
+    | A.Let {id; e1; e2} -> 
         let (s1, tau1) = trav gamma e1 in 
-        let (s2, tau2) = trav (TE.add id (clos () tau1)) e2 in 
-        (s2, tau2) *)
+        let s1_gamma = S.apply_to_gamma s1 gamma in
+        let clos_s1_gamma_tau = clos s1_gamma (TE.wrap_monotype tau1) in 
+        let gamma_ext = TE.add id clos_s1_gamma_tau gamma in
+        let s1_gamma_ext = S.apply_to_gamma s1 gamma_ext in
+         
+        let (s2, tau2) = trav s1_gamma_ext e2 in 
+        (S.compose s2 s1, tau2)
     | _ -> raise Fail
 in trav TE.empty exp
 
 let () = 
-  let (_, tau) = algorithm_w non_polymporphic_id_example in 
+  let (_, tau) = algorithm_w amk in 
   print_string (PR.pretty_print_typescheme tau)
+
+
+(*
+let gammas_bindings = TE.bindings gamma in
+        let gammas_bindings_types = List.map (fun (a, T.TypeScheme{tau; _}) -> a, tau) gammas_bindings in 
+        let new_gammas_bindings_types = List.map (fun (pv, typ) -> pv, S.apply s1 typ) gammas_bindings_types in 
+        let s1gamma = List.fold_left (fun gamma' (pv, typ) ->
+                                        TE.add pv (T.TypeScheme{tyvars=[]; tau=typ}) gamma'
+                                      ) TE.empty new_gammas_bindings_types
+        in 
+*)
+
+        (* let s1_gamma = TE.map (fun (TypeScheme{tyvars; tau}) -> T.TypeScheme{tyvars; tau=S.apply s1 tau}) gamma in *)
+        (* let s1_gamma = TE.map (S.apply_to_typescheme s1) gamma in *)

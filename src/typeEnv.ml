@@ -30,3 +30,5 @@ let look_up k t: typescheme option = Gamma.find_opt k t
 let remove k t: map_type = Gamma.remove k t
 
 let bindings t = Gamma.bindings t
+
+let map m (t: map_type) = Gamma.map m t
