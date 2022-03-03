@@ -1,11 +1,18 @@
+type tyvar = int
+
+type tycon =
+| Int
+| Bool
+| String
+
 type typ = 
-| TyCon of string
-| TyVar of string 
+| TyCon of tycon
+| TyVar of tyvar
 | TyFunApp of {t1: typ; t2: typ}
 | TyTuple of {t1: typ; t2: typ}
 
 type typescheme = 
-| TypeScheme of {tyvars: string list; tau: typ}  
+| TypeScheme of {tyvars: int list; tau: typ}  
 
 (* type types = Type of typ | TypeScheme of typescheme *)
 
