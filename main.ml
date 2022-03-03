@@ -15,7 +15,18 @@ let polymorphic_id_example = A.Let {id = "id";
                                    e1 = A.Lambda {id = "x"; e1 = A.Var "x"};
                                    e2 = A.Var "id"}
 
-let amk = A.Let {id = "id"; e1 = A.Lambda{id = "x"; e1 = A.Var "x"}; e2 = A.Let{id = "both"; e1 =A.Lambda{id = "y"; e1 = A.Lambda{id="z"; e1= A.Var "id"}}; e2=A.Var "both"}}
+let let_example = 
+  A.Let {
+  id = "id";
+  e1 = A.Lambda{id = "x"; e1 = A.Var "x"};
+  e2 = 
+    A.Let{
+    id = "both";
+    e1 =A.Lambda{id = "y"; e1 = A.Lambda{id="z"; e1= A.Var "id"}}; 
+    e2=A.Let{
+      id = "amk"; 
+      e1 = A.Lambda{id="x"; e1 = A.Var "both"};
+      e2 = A.Var "amk"}}}
                      
 (* let init_tyvars: string list =
 [
@@ -58,6 +69,8 @@ let get_next_tyvar () =
   counter := (!counter) + 1;
   !counter
 
+let unify ((typ: T.typ), (T.TyFunApp{t1; t2})): S.map_type = raise Fail
+
 let algorithm_w (exp: A.exp): S.map_type * T.typ = 
   let rec trav (gamma: TE.map_type) exp: S.map_type * T.typ =
     match exp with 
@@ -80,7 +93,12 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
             | None -> T.TyVar new_tyvar
         in 
         (s, T.TyFunApp {t1 = tau'; t2 = tau})
-    (* | A.App {e1; e2} -> raise Fail *)
+    | A.App {e1; e2} -> 
+        let (s1, tau1) = trav gamma e1 in 
+        let (s2, tau2) = trav (S.apply_to_gamma s1 gamma) e2 in
+        let new_tyvar = get_next_tyvar() in 
+        let s3 = unify (S.apply s2 tau1, T.TyFunApp{t1=tau2; t2=TyVar new_tyvar}) in  
+        raise Fail
     | A.Let {id; e1; e2} -> 
         let (s1, tau1) = trav gamma e1 in 
         let s1_gamma = S.apply_to_gamma s1 gamma in
@@ -90,11 +108,10 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
          
         let (s2, tau2) = trav s1_gamma_ext e2 in 
         (S.compose s2 s1, tau2)
-    | _ -> raise Fail
 in trav TE.empty exp
 
 let () = 
-  let (_, tau) = algorithm_w amk in 
+  let (_, tau) = algorithm_w let_example in 
   print_string (PR.pretty_print_typescheme tau)
 
 
