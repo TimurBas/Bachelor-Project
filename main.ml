@@ -20,11 +20,12 @@ let rec find_tyvars (tau: T.typ): T.tyvar list = match tau with
 | TyTuple {t1; t2} -> (find_tyvars t1) @ (find_tyvars t2)
 
 let find_free_tyvars (T.TypeScheme {tyvars; tau}) = 
-  set_difference tyvars (find_tyvars tau)
+  set_difference (find_tyvars tau) tyvars
 
 let clos gamma typescheme = 
   let T.TypeScheme {tau; _} = typescheme in 
   let free_tyvars_ts = find_free_tyvars typescheme in 
+  (* List.iter (fun tyvar -> print_string ("Free tyvars: " ^ (string_of_int tyvar) ^ "\n")) free_tyvars_ts; *)
   let gammas_bindings = TE.bindings gamma in 
   let gammas_typeschemes = List.map (fun (_, v) -> v) gammas_bindings in 
   let free_tyvars_gamma = List.concat_map find_free_tyvars gammas_typeschemes in 
@@ -36,6 +37,9 @@ let get_next_tyvar () =
   !counter
 
 let rec unify (t1, t2) subst: S.map_type = 
+  (* print_string (PR.print_tau t1); 
+  print_string (PR.print_tau t2); 
+  print_newline(); *)
   match t1, t2 with 
     | T.TyCon _ , T.TyCon _ -> subst
     | T.TyFunApp {t1 = t11; t2 = t12}, T.TyFunApp{t1 = t21; t2 = t22} -> 
@@ -83,7 +87,7 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
         let (s1, tau1) = trav gamma e1 in 
         let (s2, tau2) = trav (S.apply_to_gamma s1 gamma) e2 in
         let new_tyvar = get_next_tyvar() in 
-        let s3 = unify (S.apply s2 tau1, T.TyFunApp{t1=tau2; t2=TyVar new_tyvar}) S.empty in  
+        let s3 = unify (S.apply s2 tau1, T.TyFunApp{t1 = tau2; t2 = TyVar new_tyvar}) S.empty in 
         (S.compose s3 (S.compose s2 s1), S.apply s3 (TyVar new_tyvar))
     | A.Let {id; e1; e2} -> 
         let (s1, tau1) = trav gamma e1 in 
@@ -95,33 +99,50 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
         (S.compose s2 s1, tau2)
     | A.Tuple {e1; e2} -> 
         let (s1, tau1) = trav gamma e1 in 
-        let (s2, tau2) = trav gamma e2 in 
-        (S.compose s2 s1, TyTuple {t1 = tau1; t2 = tau2})
+        let (s2, tau2) = trav (S.apply_to_gamma s1 gamma) e2 in 
+        (S.compose s2 s1, S.apply s2 (TyTuple {t1 = tau1; t2 = tau2}))
+    | _ -> raise Fail
   in trav TE.empty exp
 
 let () = 
   print_newline(); 
-  print_string "Let_example \n";
-  let (_, tau) = algorithm_w EX.let_example in 
-  print_string (PR.print_tau tau); 
-  print_newline();
   print_string "Non_polymporphic_id_example \n";
+  (* fun x -> fun y -> fun z -> z *)
   let (_, tau) = algorithm_w EX.non_polymporphic_id_example in 
   print_string (PR.print_tau tau);
   print_newline(); 
   print_string "Polymorphic_id_example \n";
+  (* let id = fun x -> x in id *)
   let (_, tau) = algorithm_w EX.polymorphic_id_example in 
   print_string (PR.print_tau tau); 
   print_newline();
-  print_string "Function application example \n";
+  print_string "Nested_let_example \n";
+  (* let id = fun x -> x in let both = fun y -> fun z -> id in let amk = fun x -> both in (amk, amk) *)
+  let (_, tau) = algorithm_w EX.nested_let_example in 
+  print_string (PR.print_tau tau); 
+  print_newline();
+  print_string "Fun_application_example \n";
+  (* fun x -> fun y -> x y  *)
   let (_, tau) = algorithm_w EX.fun_application_example in 
   print_string (PR.print_tau tau); 
   print_newline(); 
   print_string "Fun_application_three_example \n";
+  (* fun x -> fun y -> fun z -> z (x y) *)
   let (_, tau) = algorithm_w EX.fun_application_three_example in 
   print_string (PR.print_tau tau);
-  print_newline();
-  print_string "Big_ass_small example \n";
-  let (_, tau) = algorithm_w EX.big_small_ass_example in 
+  print_newline(); 
+  print_string "Everything_example \n";
+  (* fun x -> let y = fun w -> w x in fun u -> fun z -> (y u, y z) *)
+  let (_, tau) = algorithm_w EX.everything_example in 
   print_string (PR.print_tau tau);
-  print_newline() 
+  print_newline();
+  print_string "Tuple_fun_application_example \n";
+  (* fun x -> fun y -> (x y, x y) *)
+  let (_, tau) = algorithm_w EX.tuple_fun_application_example in 
+  print_string (PR.print_tau tau);
+  print_newline(); 
+  print_string "Lambda_outside_let_example \n";
+  (* fun x -> let y = fun w -> w x in y *)
+  let (_, tau) = algorithm_w EX.lambda_outside_let_example in 
+  print_string (PR.print_tau tau);
+  print_newline(); 

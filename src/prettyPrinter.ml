@@ -14,3 +14,6 @@ let rec trav_tau tau = match tau with
 | TyTuple {t1; t2} -> "(" ^ (trav_tau t1) ^ ")" ^ " x " ^ "(" ^ (trav_tau t2) ^ ")"
 
 let print_tau tau = (trav_tau tau) ^ "\n"
+
+let print_bindings bindings = 
+  List.iter (fun (k, v) -> print_string ("Key: " ^ k ^ " and Value: " ^ print_tau v)) bindings;

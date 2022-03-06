@@ -31,3 +31,4 @@ let apply_to_gamma t gamma = TE.map (apply_to_typescheme t) gamma
 let map m (t: map_type) = Substitution.map m t
 let union a b c = Substitution.union a b c
 let compose (s1: map_type) (s2: map_type) = union (fun _ a _ -> Some a) s1 (map (fun v -> apply s1 v) s2)
+let bindings t = Substitution.bindings t
