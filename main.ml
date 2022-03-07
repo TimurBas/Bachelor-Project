@@ -201,7 +201,9 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
         print_string "Fst case \n";
         print_string "Traversing e1 \n \n";
         let s1, tau1 = trav gamma e1 in
+        print_string "Fst e1's substitution: ";
         PR.print_substitution s1;
+        print_string "Fst e1's tau: ";
         PR.print_tau tau1;
         print_newline(); 
         match tau1 with TyTuple { t1; _ } -> (s1, t1) | _ -> raise Fail)
@@ -209,16 +211,25 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
         print_string "Snd case \n";
         print_string "Traversing e1 \n \n";
         let s1, tau1 = trav gamma e1 in
+        print_string "Snd e1's substitution: ";
         PR.print_substitution s1;
+        print_string "Snd e1's tau: ";
         PR.print_tau tau1;
         print_newline(); 
         match tau1 with TyTuple { t2; _ } -> (s1, t2) | _ -> raise Fail)
     | A.BasVal b -> (
+        print_string "BasVal case \n";
         let empty_map = S.empty in
         match b with
-        | Int _ -> (empty_map, TyCon Int)
-        | Bool _ -> (empty_map, TyCon Bool)
-        | String _ -> (empty_map, TyCon String))
+        | Int _ -> 
+          print_string "BasVal is int \n\n";
+          (empty_map, TyCon Int)
+        | Bool _ -> 
+          print_string "BasVal is bool \n\n";
+          (empty_map, TyCon Bool)
+        | String _ -> 
+          print_string "BasVal is string \n\n";
+          (empty_map, TyCon String))
   in
   trav TE.empty exp
 
