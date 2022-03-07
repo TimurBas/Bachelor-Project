@@ -36,23 +36,17 @@ let find_free_tyvars (T.TypeScheme { tyvars; tau }) =
   remove_duplicates (set_difference (find_tyvars tau) tyvars)
 
 let clos gamma typescheme =
+  PR.print_gamma gamma;
+  PR.print_typescheme typescheme;
   let (T.TypeScheme { tau; _ }) = typescheme in
   let free_tyvars_ts = find_free_tyvars typescheme in
-  List.iter
-    (fun tyvar ->
-      print_string ("Free tyvars typescheme: " ^ string_of_int tyvar ^ "\n"))
-    free_tyvars_ts;
+  PR.print_tyvars "Free tyvars typescheme: " free_tyvars_ts;
   let gammas_bindings = TE.bindings gamma in
   let gammas_typeschemes = List.map (fun (_, v) -> v) gammas_bindings in
   let free_tyvars_gamma = List.concat_map find_free_tyvars gammas_typeschemes in
-  List.iter
-    (fun tyvar ->
-      print_string ("Free tyvars gamma: " ^ string_of_int tyvar ^ "\n"))
-    free_tyvars_ts;
+  PR.print_tyvars "Free tyvars gamma: " free_tyvars_gamma;
   let diff = set_difference free_tyvars_ts free_tyvars_gamma in 
-  print_string "Set difference: {";
-  List.iter (fun tyvar -> print_string (string_of_int tyvar ^ ", ")) diff;
-  print_string "}\n";
+  PR.print_tyvars "Set difference: " diff;
   T.TypeScheme { tyvars = diff; tau }
 
 let counter = ref 0
@@ -103,38 +97,62 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
     | A.Var id -> (
         match TE.look_up id gamma with
         | Some (TypeScheme { tyvars; tau }) ->
+            print_string ("Var case with id " ^ id);
+            PR.print_tyvars "Typescheme tyvars: " tyvars;
             let new_tyvars = List.map (fun _ -> get_next_tyvar ()) tyvars in
+            PR.print_tyvars "New tyvars: " tyvars;
             let new_subst =
               List.fold_left2
                 (fun s new_tv tv -> S.add tv (T.TyVar new_tv) s)
                 S.empty new_tyvars tyvars
             in
-            (S.empty, S.apply new_subst tau)
+            PR.print_substitution new_subst;
+            let applied_subs_on_tau = S.apply new_subst tau in 
+            PR.print_tau applied_subs_on_tau;
+            (S.empty, applied_subs_on_tau)
         | None -> raise Fail)
     | A.Lambda { id; e1 } ->
+        print_string ("Lambda case with id " ^ id);
         let new_tyvar = get_next_tyvar () in
-        let s, tau = trav (TE.add_alpha id (TyVar new_tyvar) gamma) e1 in
+        PR.print_tyvars "New tyvar: "[new_tyvar];
+        print_string "Extending gamma";
+        let gamma_ext = TE.add_alpha id (TyVar new_tyvar) gamma in 
+        PR.print_gamma gamma_ext;
+        print_string "Traversing e1";
+        let s, tau = trav gamma_ext e1 in
+        PR.print_substitution s;
+        PR.print_tau tau;
+        print_string "Look up";
         let tau' =
           match S.look_up new_tyvar s with
           | Some typ -> typ
           | None -> T.TyVar new_tyvar
         in
+        PR.print_tau tau';
         (s, TyFunApp { t1 = tau'; t2 = tau })
     | A.App { e1; e2 } ->
+        print_string "Function-app case";
+        print_string "Traversing e1";
         let s1, tau1 = trav gamma e1 in
-        let s2, tau2 = trav (S.apply_to_gamma s1 gamma) e2 in
-        let new_tyvar = get_next_tyvar () in
+        PR.print_substitution s1;
+        PR.print_tau tau1;
+        let s1_applied_to_gamma = (S.apply_to_gamma s1 gamma) in 
+        PR.print_gamma s1_applied_to_gamma;
+        print_string "Traversing e2";
+        let s2, tau2 = trav s1_applied_to_gamma e2 in
         PR.print_substitution s2;
-        print_string ("Type-variable in app: " ^ string_of_int new_tyvar ^ "\n");
-        print_string ("Tau1 in app: " ^ PR.string_of_tau tau1 ^ "\n");
-        print_string ("Tau2 in app: " ^ PR.string_of_tau tau2 ^ "\n");
+        PR.print_tau tau2;
+        let new_tyvar = get_next_tyvar () in
+        PR.print_tyvars "New tyvar: " [new_tyvar];
+        let apply_s2_tau1 = S.apply s2 tau1 in 
+        PR.print_tau apply_s2_tau1;
         let s3 =
           unify
             (S.apply s2 tau1, T.TyFunApp { t1 = tau2; t2 = TyVar new_tyvar }) S.empty
         in
-        PR.print_gamma gamma;
         PR.print_substitution s3;
-        (S.compose s3 (S.compose s2 s1), S.apply s3 (TyVar new_tyvar))
+        let apply_s3_to_new_tyvar= S.apply s3 (TyVar new_tyvar) in 
+        (S.compose s3 (S.compose s2 s1), apply_s3_to_new_tyvar)
     | A.Let { id; e1; e2 } ->
         let s1, tau1 = trav gamma e1 in
         let s1_gamma = S.apply_to_gamma s1 gamma in
@@ -146,7 +164,7 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
     | A.Tuple { e1; e2 } ->
         let s1, tau1 = trav gamma e1 in
         let s2, tau2 = trav (S.apply_to_gamma s1 gamma) e2 in
-        (S.compose s2 s1, S.apply s2 (TyTuple { t1 = tau1; t2 = tau2 }))
+        (S.compose s2 s1, TyTuple { t1 = tau1; t2 = tau2 })
     | A.Fst e1 -> (
         let s1, tau1 = trav gamma e1 in
         match tau1 with TyTuple { t1; _ } -> (s1, t1) | _ -> raise Fail)
@@ -170,7 +188,7 @@ let run_example ast name =
   counter := 0;
   print_newline ()
 
-let () =
+(* let () =
   (* fun x -> fun y -> fun z -> z *)
   run_example EX.non_polymporphic_id_example "Non_polymporphic_id_example \n";
   (* let id = fun x -> x in id *)
@@ -200,4 +218,8 @@ let () =
   *)
   run_example EX.polymorphic_id_with_int_and_bool
     "Polymorphic_id_with_int_and_bool \n";
-  run_example EX.debug_example "debug \n"
+  run_example EX.debug_example "debug \n" *)
+
+  let () = 
+  (* fun x -> let y = fun w -> w x in fun u -> fun z -> (y u, y z) *)
+  run_example EX.everything_example "Everything_example \n";
