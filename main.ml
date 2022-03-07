@@ -47,9 +47,9 @@ let clos gamma typescheme =
   PR.print_tyvars "Set difference: " diff;
   T.TypeScheme { tyvars = diff; tau }
 
-(* let occurs_check ty_var tau = 
+let occurs_check ty_var tau = 
   let free_tyvars = find_free_tyvars (TE.wrap_monotype tau) in 
-  if List.mem ty_var free_tyvars then raise (FailMessage "Recursive unification") *)
+  if List.mem ty_var free_tyvars then raise (FailMessage "Recursive unification")
 
 let counter = ref 0
 
@@ -57,7 +57,7 @@ let get_next_tyvar () =
   counter := !counter + 1;
   !counter
 
-(* let rec unify t1 t2 = 
+let rec unify t1 t2 = 
   match t1, t2 with 
   | T.TyVar a, t
   | t, T.TyVar a -> occurs_check a t; S.add a t S.empty
@@ -67,34 +67,7 @@ let get_next_tyvar () =
     let s2 = unify (S.apply s1 t12) (S.apply s1 t22) in 
     S.compose s2 s1
   | T.TyCon c1, T.TyCon c2 when c1 = c2 -> S.empty
-  | _ -> raise Fail *)
-
-let rec unify (t1, t2) subst : S.map_type =
-  match (t1, t2) with
-  | T.TyVar tyvar, T.TyCon b -> S.add tyvar (TyCon b) subst
-  | T.TyCon b, T.TyVar tyvar -> S.add tyvar (TyCon b) subst
-  | T.TyCon _, T.TyCon _ -> subst
-  | T.TyFunApp { t1 = t11; t2 = t12 }, T.TyFunApp { t1 = t21; t2 = t22 } ->
-      let s1 = unify (t11, t21) subst in 
-      let s2 = unify (S.apply s1 t12, S.apply s1 t22) subst in 
-      S.compose s2 s1
-  | T.TyTuple { t1 = t11; t2 = t12 }, T.TyTuple { t1 = t21; t2 = t22 } ->
-      let s1 = unify (t11, t21) subst in 
-      let s2 = unify (S.apply s1 t12, S.apply s1 t22) s1 in 
-      S.compose s2 s1
-  | T.TyVar ty_var1, T.TyVar ty_var2 ->
-      if ty_var1 = ty_var2 then subst else S.add ty_var1 (TyVar ty_var2) subst
-  | T.TyVar ty_var, t2 ->
-      let t2_tyvars = find_tyvars t2 in
-      if List.exists (fun ty_var' -> ty_var = ty_var') t2_tyvars then
-        raise (FailMessage "Recursive unification")
-      else S.add ty_var t2 subst
-  | t1, T.TyVar ty_var ->
-      let t1_tyvars = find_tyvars t1 in
-      if List.exists (fun ty_var' -> ty_var = ty_var') t1_tyvars then
-        raise (FailMessage "Recursive unification")
-      else S.add ty_var t1 subst
-  | _ -> raise (FailMessage "Failed unification")
+  | _ -> raise Fail
 
 let algorithm_w (exp : A.exp) : S.map_type * T.typ =
   let rec trav (gamma : TE.map_type) exp : S.map_type * T.typ =
@@ -168,7 +141,7 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
         let app_typ = T.TyFunApp { t1 = tau2; t2 = TyVar new_tyvar } in 
         print_string ("Unify: " ^ PR.string_of_tau apply_s2_tau1 ^ " " ^ PR.string_of_tau app_typ ^ "\n");
         let s3 =
-          unify (apply_s2_tau1, app_typ) S.empty
+          unify apply_s2_tau1 app_typ
         in
         print_string "Unification substitution: ";
         PR.print_substitution s3;
@@ -255,7 +228,7 @@ let run_example ast name =
   counter := 0;
   print_newline ()
 
-(* let () =
+let () =
   (* fun x -> fun y -> fun z -> z *)
   run_example EX.non_polymporphic_id_example "Non_polymporphic_id_example \n";
   (* let id = fun x -> x in id *)
@@ -276,8 +249,10 @@ let run_example ast name =
   run_example EX.fst_lambda_example "Fst_lambda_example \n";
   (* fun x -> fun y -> let z = (y, x) in fst z *)
   run_example EX.fst_let_example "Fst_let_example \n";
-  (* fun x -> let y = fun w -> w x in fun u -> fun z -> (y u, y z) *)
+  (* fun x -> let y = (fun w -> w) x in fun u -> fun z -> (y u, y z) *)
   run_example EX.everything_example "Everything_example \n";
+  (* fun x -> let y = fun w -> (w x) in fun u -> fun z -> (y u, y z) *)
+  run_example EX.everything_example2 "Everything_example2 \n";
   (*
      let id = fun x -> x in
      let both = (id 2, id true) in
@@ -285,8 +260,4 @@ let run_example ast name =
   *)
   run_example EX.polymorphic_id_with_int_and_bool
     "Polymorphic_id_with_int_and_bool \n";
-  run_example EX.debug_example "debug \n" *)
-
-  let () = 
-  (* fun x -> let y = fun w -> w x in fun u -> fun z -> (y u, y z) *)
-  run_example EX.everything_example2 "Everything_example \n";
+  run_example EX.debug_example "debug \n"
