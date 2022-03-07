@@ -101,7 +101,20 @@ let algorithm_w (exp: A.exp): S.map_type * T.typ =
         let (s1, tau1) = trav gamma e1 in 
         let (s2, tau2) = trav (S.apply_to_gamma s1 gamma) e2 in 
         (S.compose s2 s1, S.apply s2 (TyTuple {t1 = tau1; t2 = tau2}))
-    | _ -> raise Fail
+    | A.Fst e1 -> 
+        let (s1, tau1) = trav gamma e1 in 
+        (
+          match tau1 with 
+            | TyTuple {t1; _} -> (s1, S.apply s1 t1) 
+            | _ -> raise Fail
+        )
+    | A.Snd e1 -> 
+      let (s1, tau1) = trav gamma e1 in 
+      (
+        match tau1 with 
+          | TyTuple {t2; _} -> (s1, S.apply s1 t2) 
+          | _ -> raise Fail
+      )
   in trav TE.empty exp
 
 let () = 
@@ -130,11 +143,6 @@ let () =
   (* fun x -> fun y -> fun z -> z (x y) *)
   let (_, tau) = algorithm_w EX.fun_application_three_example in 
   print_string (PR.print_tau tau);
-  print_newline(); 
-  print_string "Everything_example \n";
-  (* fun x -> let y = fun w -> w x in fun u -> fun z -> (y u, y z) *)
-  let (_, tau) = algorithm_w EX.everything_example in 
-  print_string (PR.print_tau tau);
   print_newline();
   print_string "Tuple_fun_application_example \n";
   (* fun x -> fun y -> (x y, x y) *)
@@ -146,3 +154,17 @@ let () =
   let (_, tau) = algorithm_w EX.lambda_outside_let_example in 
   print_string (PR.print_tau tau);
   print_newline(); 
+  print_string "Fst_example \n";
+  (* fun x -> fst (x, x) *)
+  let (_, tau) = algorithm_w EX.fst_lambda_example in 
+  print_string (PR.print_tau tau);
+  print_newline(); 
+  print_string "Fst_let_example \n";
+  (* fun x -> fun y -> let z = (y, x) in fst z *)
+  let (_, tau) = algorithm_w EX.fst_let_example in 
+  print_string (PR.print_tau tau);
+  print_newline(); 
+  print_string "Everything_example \n";
+  (* fun x -> let y = fun w -> w x in fun u -> fun z -> (y u, y z) *)
+  let (_, tau) = algorithm_w EX.everything_example in 
+  print_string (PR.print_tau tau);

@@ -24,30 +24,6 @@ let fun_application_example =
 let fun_application_three_example = 
   Lambda {id = "x"; e1 = Lambda {id = "y"; e1 = Lambda {id = "z"; e1 = App {e1 = Var "z"; e2 = App {e1 = Var "x"; e2 = Var "y"}}}}}
 
-(* let everything_example = 
-  A.Lambda {id = "x"; e1 =
-    A.Let {
-      id = "y"; 
-      e1 = A.App {e1 = A.Lambda{id = "w"; e1 = A.Var "w"}; e2 = A.Var "x"};
-      e2 = A.Lambda {id = "u";
-                     e1 = A.Lambda {id = "z"; 
-                                    e1 = A.Tuple {e1 = A.App {e1 = A.Var "y"; 
-                                                              e2 = A.Var "u"}; 
-                                                              e2 = A.App {e1 = A.Var "y"; 
-                                                                          e2 = A.Var "z"}}}}}} *)
-                                                                          
-let everything_example = 
-  Lambda {id = "x"; e1 =
-    Let {
-      id = "y"; 
-      e1 = App {e1 = Lambda{id = "w"; e1 = Var "w"}; e2 = Var "x"};
-      e2 = Lambda {id = "u";
-                     e1 = Lambda {id = "z"; 
-                                    e1 = Tuple {e1 = App {e1 = Var "y"; 
-                                                              e2 = Var "u"}; 
-                                                              e2 = App {e1 = Var "y"; 
-                                                                          e2 = Var "z"}}}}}}                                                                      
-
 let tuple_fun_application_example = 
   Lambda {
     id = "x";
@@ -76,3 +52,50 @@ let lambda_outside_let_example =
                         }}; 
           e2 = Var "y"}
       }}
+
+let fst_lambda_example = 
+  Lambda {
+    id = "x";
+    e1 = 
+      Fst (Tuple{e1 = Var "x"; e2 = Var "x"})
+  } 
+
+let fst_let_example = 
+  Lambda {
+    id = "x";
+    e1 = Lambda {
+      id = "y";
+      e1 = Let {
+        id = "z";
+        e1 = Tuple {
+          e1 = Var "y";
+          e2 = Var "x";
+        };
+        e2 = Fst (Var "z")
+      }
+    }
+  }
+
+(* let everything_example = 
+  A.Lambda {id = "x"; e1 =
+    A.Let {
+      id = "y"; 
+      e1 = A.App {e1 = A.Lambda{id = "w"; e1 = A.Var "w"}; e2 = A.Var "x"};
+      e2 = A.Lambda {id = "u";
+                     e1 = A.Lambda {id = "z"; 
+                                    e1 = A.Tuple {e1 = A.App {e1 = A.Var "y"; 
+                                                              e2 = A.Var "u"}; 
+                                                              e2 = A.App {e1 = A.Var "y"; 
+                                                                          e2 = A.Var "z"}}}}}} *)
+                                                                          
+let everything_example = 
+  Lambda {id = "x"; e1 =
+    Let {
+      id = "y"; 
+      e1 = App {e1 = Lambda{id = "w"; e1 = Var "w"}; e2 = Var "x"};
+      e2 = Lambda {id = "u";
+                      e1 = Lambda {id = "z"; 
+                                    e1 = Tuple {e1 = App {e1 = Var "y"; 
+                                                              e2 = Var "u"}; 
+                                                              e2 = App {e1 = Var "y"; 
+                                                                          e2 = Var "z"}}}}}}                                                                      
