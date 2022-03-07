@@ -162,6 +162,34 @@ let everything_example =
           };
     }
 
+let everything_example2 =
+  Lambda
+    {
+      id = "x";
+      e1 =
+        Let
+          {
+            id = "y";
+            e1 = Lambda {id = "w"; e1 = App {e1 = Var "w"; e2 = Var "x"}};
+            e2 =
+              Lambda
+                {
+                  id = "u";
+                  e1 =
+                    Lambda
+                      {
+                        id = "z";
+                        e1 =
+                          Tuple
+                            {
+                              e1 = App { e1 = Var "y"; e2 = Var "u" };
+                              e2 = App { e1 = Var "y"; e2 = Var "z" };
+                            };
+                      };
+                };
+          };
+    }
+
 let polymorphic_id_with_int_and_bool =
   Let
     {

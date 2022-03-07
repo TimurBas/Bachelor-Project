@@ -1,0 +1,156 @@
+Everything_example 
+Lambda case with id x
+New tyvar: {1}
+Extending gamma: {x -> ∀ . 1}
+Traversing e1 
+ 
+Let case 
+Traversing e1 
+ 
+Lambda case with id w
+New tyvar: {2}
+Extending gamma: {w -> ∀ . 2, x -> ∀ . 1}
+Traversing e1 
+ 
+App case 
+Traversing e1 
+ 
+Var case with id w
+Typescheme tyvars: {}
+New tyvars: {}
+New_subst: {}
+Tau is: 2
+Applying new_subst on tau: 2
+
+App e1's substitution: {}
+App e1's tau: 2
+S1 \gamma: {w -> ∀ . 2, x -> ∀ . 1}
+Traversing e2 
+ 
+Var case with id x
+Typescheme tyvars: {}
+New tyvars: {}
+New_subst: {}
+Tau is: 1
+Applying new_subst on tau: 1
+
+App e2's substitution: {}
+App e2's tau: 1
+New tyvar: {3}
+S2 tau1: 2
+Unify: 2 (1 -> 3)
+Unification substitution: {2 -> (1 -> 3)}
+S3(new_tyvar): 3
+
+Lambda e1's substitution: {2 -> (1 -> 3)}
+Lambda e1's tau: 3
+Lambda look up S(2): (1 -> 3)
+
+Let e1's substitution: {2 -> (1 -> 3)}
+Let e1's tau: ((1 -> 3) -> 3)
+S1 \gamma{x -> ∀ . 1}
+Calling clos with and above: ((1 -> 3) -> 3)
+Free tyvars typescheme: {1, 3}
+Free tyvars gamma: {1}
+Set difference: {3}
+Clos typescheme: ∀ 3. ((1 -> 3) -> 3)
+Adding above to gamma - this is \gamma_ext:{x -> ∀ . 1, y -> ∀ 3. ((1 -> 3) -> 3)}
+S1 \gamma_ext{x -> ∀ . 1, y -> ∀ 3. ((1 -> 3) -> 3)}
+Traversing e2 
+ 
+Lambda case with id u
+New tyvar: {4}
+Extending gamma: {u -> ∀ . 4, x -> ∀ . 1, y -> ∀ 3. ((1 -> 3) -> 3)}
+Traversing e1 
+ 
+Lambda case with id z
+New tyvar: {5}
+Extending gamma: {u -> ∀ . 4, x -> ∀ . 1, y -> ∀ 3. ((1 -> 3) -> 3), z -> ∀ . 5}
+Traversing e1 
+ 
+Tuple case 
+Traversing e1 
+ 
+App case 
+Traversing e1 
+ 
+Var case with id y
+Typescheme tyvars: {3}
+New tyvars: {6}
+New_subst: {3 -> 6}
+Tau is: ((1 -> 3) -> 3)
+Applying new_subst on tau: ((1 -> 6) -> 6)
+
+App e1's substitution: {}
+App e1's tau: ((1 -> 6) -> 6)
+S1 \gamma: {u -> ∀ . 4, x -> ∀ . 1, y -> ∀ 3. ((1 -> 3) -> 3), z -> ∀ . 5}
+Traversing e2 
+ 
+Var case with id u
+Typescheme tyvars: {}
+New tyvars: {}
+New_subst: {}
+Tau is: 4
+Applying new_subst on tau: 4
+
+App e2's substitution: {}
+App e2's tau: 4
+New tyvar: {7}
+S2 tau1: ((1 -> 6) -> 6)
+Unify: ((1 -> 6) -> 6) (4 -> 7)
+Unification substitution: {4 -> (1 -> 6), 6 -> 7}
+S3(new_tyvar): 7
+
+Tuple e1's substitution: {4 -> (1 -> 6), 6 -> 7}
+Tuple e1's tau: 7
+Traversing e2 
+ 
+App case 
+Traversing e1 
+ 
+Var case with id y
+Typescheme tyvars: {3}
+New tyvars: {8}
+New_subst: {3 -> 8}
+Tau is: ((1 -> 3) -> 3)
+Applying new_subst on tau: ((1 -> 8) -> 8)
+
+App e1's substitution: {}
+App e1's tau: ((1 -> 8) -> 8)
+S1 \gamma: {u -> ∀ . (1 -> 6), x -> ∀ . 1, y -> ∀ 3. ((1 -> 3) -> 3), z -> ∀ . 5}
+Traversing e2 
+ 
+Var case with id z
+Typescheme tyvars: {}
+New tyvars: {}
+New_subst: {}
+Tau is: 5
+Applying new_subst on tau: 5
+
+App e2's substitution: {}
+App e2's tau: 5
+New tyvar: {9}
+S2 tau1: ((1 -> 8) -> 8)
+Unify: ((1 -> 8) -> 8) (5 -> 9)
+Unification substitution: {5 -> (1 -> 8), 8 -> 9}
+S3(new_tyvar): 9
+
+Tuple e2's substitution: {5 -> (1 -> 8), 8 -> 9}
+Tuple e2's tau: 9
+
+Lambda e1's substitution: {4 -> (1 -> 6), 5 -> (1 -> 8), 6 -> 7, 8 -> 9}
+Lambda e1's tau: (7) x (9)
+Lambda look up S(5): (1 -> 8)
+
+Lambda e1's substitution: {4 -> (1 -> 6), 5 -> (1 -> 8), 6 -> 7, 8 -> 9}
+Lambda e1's tau: ((1 -> 8) -> (7) x (9))
+Lambda look up S(4): (1 -> 6)
+
+Let e2's substitution: {4 -> (1 -> 6), 5 -> (1 -> 8), 6 -> 7, 8 -> 9}
+Let e2's tau: ((1 -> 6) -> ((1 -> 8) -> (7) x (9)))
+
+Lambda e1's substitution: {2 -> (1 -> 3), 4 -> (1 -> 6), 5 -> (1 -> 8), 6 -> 7, 8 -> 9}
+Lambda e1's tau: ((1 -> 6) -> ((1 -> 8) -> (7) x (9)))
+Lambda look up S(1): 1
+
+(1 -> ((1 -> 6) -> ((1 -> 8) -> (7) x (9))))

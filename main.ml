@@ -36,8 +36,6 @@ let find_free_tyvars (T.TypeScheme { tyvars; tau }) =
   remove_duplicates (set_difference (find_tyvars tau) tyvars)
 
 let clos gamma typescheme =
-  PR.print_gamma gamma;
-  PR.print_typescheme typescheme;
   let (T.TypeScheme { tau; _ }) = typescheme in
   let free_tyvars_ts = find_free_tyvars typescheme in
   PR.print_tyvars "Free tyvars typescheme: " free_tyvars_ts;
@@ -49,16 +47,29 @@ let clos gamma typescheme =
   PR.print_tyvars "Set difference: " diff;
   T.TypeScheme { tyvars = diff; tau }
 
+(* let occurs_check ty_var tau = 
+  let free_tyvars = find_free_tyvars (TE.wrap_monotype tau) in 
+  if List.mem ty_var free_tyvars then raise (FailMessage "Recursive unification") *)
+
 let counter = ref 0
 
 let get_next_tyvar () =
   counter := !counter + 1;
   !counter
 
+(* let rec unify t1 t2 = 
+  match t1, t2 with 
+  | T.TyVar a, t
+  | t, T.TyVar a -> occurs_check a t; S.add a t S.empty
+  | T.TyFunApp { t1 = t11; t2 = t12 }, T.TyFunApp { t1 = t21; t2 = t22 } 
+  | T.TyTuple { t1 = t11; t2 = t12 }, T.TyTuple { t1 = t21; t2 = t22 } ->
+    let s1 = unify t11 t21 in 
+    let s2 = unify (S.apply s1 t12) (S.apply s1 t22) in 
+    S.compose s2 s1
+  | T.TyCon c1, T.TyCon c2 when c1 = c2 -> S.empty
+  | _ -> raise Fail *)
+
 let rec unify (t1, t2) subst : S.map_type =
-  (* print_string (PR.string_of_tau t1);
-     print_string (PR.string_of_tau t2);
-     print_newline(); *)
   match (t1, t2) with
   | T.TyVar tyvar, T.TyCon b -> S.add tyvar (TyCon b) subst
   | T.TyCon b, T.TyVar tyvar -> S.add tyvar (TyCon b) subst
@@ -66,17 +77,11 @@ let rec unify (t1, t2) subst : S.map_type =
   | T.TyFunApp { t1 = t11; t2 = t12 }, T.TyFunApp { t1 = t21; t2 = t22 } ->
       let s1 = unify (t11, t21) subst in 
       let s2 = unify (S.apply s1 t12, S.apply s1 t22) subst in 
-      S.union
-      (fun _ a _  -> Some a)
-      s2
-      s1
+      S.compose s2 s1
   | T.TyTuple { t1 = t11; t2 = t12 }, T.TyTuple { t1 = t21; t2 = t22 } ->
       let s1 = unify (t11, t21) subst in 
       let s2 = unify (S.apply s1 t12, S.apply s1 t22) s1 in 
-      S.union
-      (fun _ a _  -> Some a)
-      s2
-      s1
+      S.compose s2 s1
   | T.TyVar ty_var1, T.TyVar ty_var2 ->
       if ty_var1 = ty_var2 then subst else S.add ty_var1 (TyVar ty_var2) subst
   | T.TyVar ty_var, t2 ->
@@ -100,7 +105,7 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
             print_string ("Var case with id " ^ id ^ "\n");
             PR.print_tyvars "Typescheme tyvars: " tyvars;
             let new_tyvars = List.map (fun _ -> get_next_tyvar ()) tyvars in
-            PR.print_tyvars "New tyvars: " tyvars;
+            PR.print_tyvars "New tyvars: " new_tyvars;
             let new_subst =
               List.fold_left2
                 (fun s new_tv tv -> S.add tv (T.TyVar new_tv) s)
@@ -163,8 +168,7 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
         let app_typ = T.TyFunApp { t1 = tau2; t2 = TyVar new_tyvar } in 
         print_string ("Unify: " ^ PR.string_of_tau apply_s2_tau1 ^ " " ^ PR.string_of_tau app_typ ^ "\n");
         let s3 =
-          unify
-            (apply_s2_tau1, app_typ) S.empty
+          unify (apply_s2_tau1, app_typ) S.empty
         in
         print_string "Unification substitution: ";
         PR.print_substitution s3;
@@ -184,7 +188,7 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
         let s1_gamma = S.apply_to_gamma s1 gamma in
         print_string "S1 \\gamma";
         PR.print_gamma s1_gamma;
-        print_string ("Calling clos with: " ^ PR.string_of_tau tau1^ "\n");
+        print_string ("Calling clos with and above: " ^ PR.string_of_tau tau1^ "\n");
         let clos_s1_gamma_tau = clos s1_gamma (TE.wrap_monotype tau1) in
         print_string "Clos typescheme: ";
         PR.print_typescheme clos_s1_gamma_tau;
@@ -206,15 +210,18 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
         print_string "Tuple case \n";
         print_string "Traversing e1 \n \n";
         let s1, tau1 = trav gamma e1 in
-        print_newline(); 
+        print_string "Tuple e1's substitution: ";
         PR.print_substitution s1;
+        print_string "Tuple e1's tau: ";
         PR.print_tau tau1;
         print_string "Traversing e2 \n \n";
         let s2, tau2 = trav (S.apply_to_gamma s1 gamma) e2 in
+        print_string "Tuple e2's substitution: ";
         PR.print_substitution s2;
+        print_string "Tuple e2's tau: ";
         PR.print_tau tau2;
         print_newline(); 
-        (S.compose s2 s1, TyTuple { t1 = tau1; t2 = tau2 })
+        (S.compose s2 s1, S.apply s2 (TyTuple { t1 = tau1; t2 = tau2 }))
     | A.Fst e1 -> (
         print_string "Fst case \n";
         print_string "Traversing e1 \n \n";
@@ -282,4 +289,4 @@ let run_example ast name =
 
   let () = 
   (* fun x -> let y = fun w -> w x in fun u -> fun z -> (y u, y z) *)
-  run_example EX.everything_example "Everything_example \n";
+  run_example EX.everything_example2 "Everything_example \n";
