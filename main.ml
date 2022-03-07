@@ -97,7 +97,7 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
     | A.Var id -> (
         match TE.look_up id gamma with
         | Some (TypeScheme { tyvars; tau }) ->
-            print_string ("Var case with id " ^ id);
+            print_string ("Var case with id " ^ id ^ "\n");
             PR.print_tyvars "Typescheme tyvars: " tyvars;
             let new_tyvars = List.map (fun _ -> get_next_tyvar ()) tyvars in
             PR.print_tyvars "New tyvars: " tyvars;
@@ -106,70 +106,130 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
                 (fun s new_tv tv -> S.add tv (T.TyVar new_tv) s)
                 S.empty new_tyvars tyvars
             in
+            print_string "New_subst: ";
             PR.print_substitution new_subst;
+            print_string "Tau is: ";
+            PR.print_tau tau;
+            print_string "Applying new_subst on tau: ";
             let applied_subs_on_tau = S.apply new_subst tau in 
             PR.print_tau applied_subs_on_tau;
+            print_newline();
             (S.empty, applied_subs_on_tau)
         | None -> raise Fail)
     | A.Lambda { id; e1 } ->
-        print_string ("Lambda case with id " ^ id);
+        print_string ("Lambda case with id " ^ id ^ "\n");
         let new_tyvar = get_next_tyvar () in
-        PR.print_tyvars "New tyvar: "[new_tyvar];
-        print_string "Extending gamma";
+        PR.print_tyvars "New tyvar: " [new_tyvar];
+        print_string "Extending gamma: ";
         let gamma_ext = TE.add_alpha id (TyVar new_tyvar) gamma in 
         PR.print_gamma gamma_ext;
-        print_string "Traversing e1";
+        print_string "Traversing e1 \n \n";
         let s, tau = trav gamma_ext e1 in
+        print_string "Lambda e1's substitution: ";
         PR.print_substitution s;
+        print_string "Lambda e1's tau: ";
         PR.print_tau tau;
-        print_string "Look up";
+        print_string ("Lambda look up S(" ^ (string_of_int new_tyvar) ^ "): ");
         let tau' =
           match S.look_up new_tyvar s with
           | Some typ -> typ
           | None -> T.TyVar new_tyvar
         in
         PR.print_tau tau';
+        print_newline();
         (s, TyFunApp { t1 = tau'; t2 = tau })
     | A.App { e1; e2 } ->
-        print_string "Function-app case";
-        print_string "Traversing e1";
+        print_string "App case \n";
+        print_string "Traversing e1 \n \n";
         let s1, tau1 = trav gamma e1 in
+        print_string "App e1's substitution: ";
         PR.print_substitution s1;
+        print_string "App e1's tau: ";
         PR.print_tau tau1;
         let s1_applied_to_gamma = (S.apply_to_gamma s1 gamma) in 
+        print_string "S1 \\gamma: ";
         PR.print_gamma s1_applied_to_gamma;
-        print_string "Traversing e2";
+        print_string "Traversing e2 \n \n";
         let s2, tau2 = trav s1_applied_to_gamma e2 in
+        print_string "App e2's substitution: ";
         PR.print_substitution s2;
+        print_string "App e2's tau: ";
         PR.print_tau tau2;
         let new_tyvar = get_next_tyvar () in
         PR.print_tyvars "New tyvar: " [new_tyvar];
         let apply_s2_tau1 = S.apply s2 tau1 in 
+        print_string "S2 tau1: ";
         PR.print_tau apply_s2_tau1;
+        let app_typ = T.TyFunApp { t1 = tau2; t2 = TyVar new_tyvar } in 
+        print_string ("Unify: " ^ PR.string_of_tau apply_s2_tau1 ^ " " ^ PR.string_of_tau app_typ ^ "\n");
         let s3 =
           unify
-            (S.apply s2 tau1, T.TyFunApp { t1 = tau2; t2 = TyVar new_tyvar }) S.empty
+            (apply_s2_tau1, app_typ) S.empty
         in
+        print_string "Unification substitution: ";
         PR.print_substitution s3;
-        let apply_s3_to_new_tyvar= S.apply s3 (TyVar new_tyvar) in 
+        let apply_s3_to_new_tyvar= S.apply s3 (TyVar new_tyvar) in
+        print_string "S3(new_tyvar): ";
+        PR.print_tau apply_s3_to_new_tyvar;
+        print_newline(); 
         (S.compose s3 (S.compose s2 s1), apply_s3_to_new_tyvar)
     | A.Let { id; e1; e2 } ->
+        print_string "Let case \n";
+        print_string "Traversing e1 \n \n";
         let s1, tau1 = trav gamma e1 in
+        print_string "Let e1's substitution: ";
+        PR.print_substitution s1;
+        print_string "Let e1's tau: ";
+        PR.print_tau tau1;
         let s1_gamma = S.apply_to_gamma s1 gamma in
+        print_string "S1 \\gamma";
+        PR.print_gamma s1_gamma;
+        print_string ("Calling clos with: " ^ PR.string_of_tau tau1^ "\n");
         let clos_s1_gamma_tau = clos s1_gamma (TE.wrap_monotype tau1) in
+        print_string "Clos typescheme: ";
+        PR.print_typescheme clos_s1_gamma_tau;
         let gamma_ext = TE.add id clos_s1_gamma_tau gamma in
+        print_string "Adding above to gamma - this is \\gamma_ext:";
+        PR.print_gamma gamma_ext;
         let s1_gamma_ext = S.apply_to_gamma s1 gamma_ext in
+        print_string "S1 \\gamma_ext";
+        PR.print_gamma s1_gamma_ext;
+        print_string "Traversing e2 \n \n";
         let s2, tau2 = trav s1_gamma_ext e2 in
+        print_string "Let e2's substitution: ";
+        PR.print_substitution s2;
+        print_string "Let e2's tau: ";
+        PR.print_tau tau2;
+        print_newline(); 
         (S.compose s2 s1, tau2)
     | A.Tuple { e1; e2 } ->
+        print_string "Tuple case \n";
+        print_string "Traversing e1 \n \n";
         let s1, tau1 = trav gamma e1 in
+        print_newline(); 
+        PR.print_substitution s1;
+        PR.print_tau tau1;
+        print_string "Traversing e2 \n \n";
         let s2, tau2 = trav (S.apply_to_gamma s1 gamma) e2 in
+        PR.print_substitution s2;
+        PR.print_tau tau2;
+        print_newline(); 
         (S.compose s2 s1, TyTuple { t1 = tau1; t2 = tau2 })
     | A.Fst e1 -> (
+        print_string "Fst case \n";
+        print_string "Traversing e1 \n \n";
         let s1, tau1 = trav gamma e1 in
+        PR.print_substitution s1;
+        PR.print_tau tau1;
+        print_newline(); 
         match tau1 with TyTuple { t1; _ } -> (s1, t1) | _ -> raise Fail)
     | A.Snd e1 -> (
+        print_string "Snd case \n";
+        print_string "Traversing e1 \n \n";
         let s1, tau1 = trav gamma e1 in
+        PR.print_substitution s1;
+        PR.print_tau tau1;
+        print_newline(); 
         match tau1 with TyTuple { t2; _ } -> (s1, t2) | _ -> raise Fail)
     | A.BasVal b -> (
         let empty_map = S.empty in
