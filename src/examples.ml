@@ -209,7 +209,6 @@ let polymorphic_id_with_int_and_bool =
           };
     }
 
-(* let id x = x in id 2 *)
 let debug_example =
   Let
     {
