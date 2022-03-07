@@ -59,8 +59,10 @@ let get_next_tyvar () =
 
 let rec unify t1 t2 = 
   match t1, t2 with 
-  | T.TyVar a, t
-  | t, T.TyVar a -> occurs_check a t; S.add a t S.empty
+  | T.TyVar ty_var1, T.TyVar ty_var2 when ty_var1 = ty_var2 -> S.empty
+  | T.TyVar ty_var1, T.TyVar ty_var2 when ty_var1 != ty_var2 -> S.add ty_var1 (TyVar ty_var2) S.empty
+  | T.TyVar ty_var, t
+  | t, T.TyVar ty_var -> occurs_check ty_var t; S.add ty_var t S.empty
   | T.TyFunApp { t1 = t11; t2 = t12 }, T.TyFunApp { t1 = t21; t2 = t22 } 
   | T.TyTuple { t1 = t11; t2 = t12 }, T.TyTuple { t1 = t21; t2 = t22 } ->
     let s1 = unify t11 t21 in 
