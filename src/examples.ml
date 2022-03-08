@@ -314,7 +314,7 @@ let many_nested_lets =
                       e1 = Tuple {
                         e1 = Tuple {
                           e1 = Tuple {
-                            e1 = Var "p5 ";
+                            e1 = Var "p5";
                             e2 = Var "p4"
                           };
                           e2 = Var "p3"
