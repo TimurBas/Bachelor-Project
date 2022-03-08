@@ -171,4 +171,14 @@ let () =
   (* let id x = x in id 2 *)
   run_example EX.polymorphic_id_with_int_and_bool
     "Polymorphic_id_with_int_and_bool \n";
+  (* 
+    let id = fun x -> x in 
+    let pair = fun p -> fun x -> fun y -> (p x) y in  
+    let p1 = fun p -> ((pair id) id) p in 
+    let p2 = fun p -> pair p1 p1 p in 
+    let p3 = fun p -> pair p2 p2 p in 
+    let p4 = fun p -> pair p3 p3 p in 
+    let p5 = fun p -> pair p4 p4 p in 
+    ((((((p5, p4), p3), p2), p1), pair), id) *)
+  run_example EX.many_nested_lets "Many_nested_lets \n";
   run_example EX.debug_example "debug \n"

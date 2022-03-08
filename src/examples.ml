@@ -209,6 +209,132 @@ let polymorphic_id_with_int_and_bool =
           };
     }
 
+
+let many_nested_lets = 
+  Let 
+    {
+      id = "id";
+      e1 = Lambda {id = "x"; e1 = Var "x"};
+      e2 = Let {
+        id = "pair";
+        e1 = Lambda {
+          id = "p";
+          e1 = Lambda {
+            id = "x";
+            e1 = Lambda {
+              id = "y";
+              e1 = App {
+                e1 = App {
+                  e1 = Var "p";
+                  e2 = Var "x";
+                };
+                e2 = Var "y"
+              }
+            }
+          }
+        };
+        e2 = Let {
+          id = "p1";
+          e1 = Lambda {
+            id = "p";
+            e1 = App {
+              e1 = App {
+                e1 = App {
+                  e1 = Var "pair";
+                  e2 = Var "id"
+                };
+                e2 = Var "id"
+              };
+              e2 = Var "p"
+            }
+          };
+          e2 = Let {
+            id = "p2";
+            e1 = Lambda {
+              id = "p";
+              e1 = App {
+                e1 = App {
+                  e1 = App {
+                    e1 = Var "pair";
+                    e2 = Var "p1"
+                  };
+                  e2 = Var "p1"
+                };
+                e2 = Var "p"
+              }
+            };
+            e2 = Let {
+              id = "p3";
+              e1 = Lambda {
+                id = "p";
+                e1 = App {
+                  e1 = App {
+                    e1 = App {
+                      e1 = Var "pair";
+                      e2 = Var "p2"
+                    };
+                    e2 = Var "p2"
+                  };
+                  e2 = Var "p"
+                }
+              };
+              e2 = Let {
+                id = "p4";
+                e1 = Lambda {
+                  id = "p";
+                  e1 = App {
+                    e1 = App {
+                      e1 = App {
+                        e1 = Var "pair";
+                        e2 = Var "p3"
+                      };
+                      e2 = Var "p3"
+                    };
+                    e2 = Var "p"
+                  }
+                };
+                e2 = Let {
+                id = "p5";
+                e1 = Lambda {
+                  id = "p";
+                  e1 = App {
+                    e1 = App {
+                      e1 = App {
+                        e1 = Var "pair";
+                        e2 = Var "p4"
+                      };
+                      e2 = Var "p4"
+                    };
+                    e2 = Var "p"
+                  }
+                };
+                e2 = Tuple {
+                  e1 = Tuple {
+                    e1 = Tuple {
+                      e1 = Tuple {
+                        e1 = Tuple {
+                          e1 = Tuple {
+                            e1 = Var "p5 ";
+                            e2 = Var "p4"
+                          };
+                          e2 = Var "p3"
+                        };
+                        e2 = Var "p2"
+                      };
+                      e2 = Var "p1"
+                    };
+                    e2 = Var "pair"
+                  };
+                  e2 = Var "id"
+                }
+              }
+              }
+            }
+          }
+        }
+      }
+    }
+
 let debug_example =
   Let
     {
@@ -216,3 +342,4 @@ let debug_example =
       e1 = Lambda { id = "x"; e1 = Var "x" };
       e2 = App { e1 = Var "id"; e2 = BasVal (Int 2) };
     }
+
