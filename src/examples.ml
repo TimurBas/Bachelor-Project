@@ -122,18 +122,6 @@ let fst_let_example =
           };
     }
 
-(* let everything_example =
-   A.Lambda {id = "x"; e1 =
-     A.Let {
-       id = "y";
-       e1 = A.App {e1 = A.Lambda{id = "w"; e1 = A.Var "w"}; e2 = A.Var "x"};
-       e2 = A.Lambda {id = "u";
-                      e1 = A.Lambda {id = "z";
-                                     e1 = A.Tuple {e1 = A.App {e1 = A.Var "y";
-                                                               e2 = A.Var "u"};
-                                                               e2 = A.App {e1 = A.Var "y";
-                                                                           e2 = A.Var "z"}}}}}} *)
-
 let everything_example =
   Lambda
     {
