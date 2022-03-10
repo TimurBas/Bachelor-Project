@@ -181,4 +181,5 @@ let () =
     let p5 = fun p -> pair p4 p4 p in 
     ((((((p5, p4), p3), p2), p1), pair), id) *)
   run_example EX.many_nested_lets "Many_nested_lets \n";
+  run_example EX.many_lambdas "Many lambdas \n";
   run_example EX.debug_example "debug \n"

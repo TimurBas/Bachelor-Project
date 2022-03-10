@@ -323,6 +323,225 @@ let many_nested_lets =
       }
     }
 
+let many_lambdas = 
+  Lambda {
+    id = "x";
+    e1 =   Lambda {
+      id = "x";
+      e1 =   Lambda {
+        id = "x";
+        e1 =   Lambda {
+          id = "x";
+          e1 =   Lambda {
+            id = "x";
+            e1 =   Lambda {
+              id = "x";
+              e1 = Lambda {
+                id = "x";
+                e1 =   Lambda {
+                  id = "x";
+                  e1 =   Lambda {
+                    id = "x";
+                    e1 =   Lambda {
+                      id = "x";
+                      e1 =   Lambda {
+                        id = "x";
+                        e1 =   Lambda {
+                          id = "x";
+                          e1 = Lambda {
+                            id = "x";
+                            e1 =   Lambda {
+                              id = "x";
+                              e1 =   Lambda {
+                                id = "x";
+                                e1 =   Lambda {
+                                  id = "x";
+                                  e1 =   Lambda {
+                                    id = "x";
+                                    e1 =   Lambda {
+                                      id = "x";
+                                      e1 = Lambda {
+                                        id = "x";
+                                        e1 =   Lambda {
+                                          id = "x";
+                                          e1 =   Lambda {
+                                            id = "x";
+                                            e1 =   Lambda {
+                                              id = "x";
+                                              e1 =   Lambda {
+                                                id = "x";
+                                                e1 =   Lambda {
+                                                  id = "x";
+                                                  e1 = Lambda {
+                                                    id = "x";
+                                                    e1 =   Lambda {
+                                                      id = "x";
+                                                      e1 =   Lambda {
+                                                        id = "x";
+                                                        e1 =   Lambda {
+                                                          id = "x";
+                                                          e1 =   Lambda {
+                                                            id = "x";
+                                                            e1 =   Lambda {
+                                                              id = "x";
+                                                              e1 = Lambda {
+                                                                id = "x";
+                                                                e1 =   Lambda {
+                                                                  id = "x";
+                                                                  e1 =   Lambda {
+                                                                    id = "x";
+                                                                    e1 =   Lambda {
+                                                                      id = "x";
+                                                                      e1 =   Lambda {
+                                                                        id = "x";
+                                                                        e1 =   Lambda {
+                                                                          id = "x";
+                                                                          e1 = Lambda {
+                                                                            id = "x";
+                                                                            e1 =   Lambda {
+                                                                              id = "x";
+                                                                              e1 =   Lambda {
+                                                                                id = "x";
+                                                                                e1 =   Lambda {
+                                                                                  id = "x";
+                                                                                  e1 =   Lambda {
+                                                                                    id = "x";
+                                                                                    e1 =   Lambda {
+                                                                                      id = "x";
+                                                                                      e1 = Lambda {
+                                                                                        id = "x";
+                                                                                        e1 =   Lambda {
+                                                                                          id = "x";
+                                                                                          e1 =   Lambda {
+                                                                                            id = "x";
+                                                                                            e1 =   Lambda {
+                                                                                              id = "x";
+                                                                                              e1 =   Lambda {
+                                                                                                id = "x";
+                                                                                                e1 =   Lambda {
+                                                                                                  id = "x";
+                                                                                                  e1 = Lambda {
+                                                                                                    id = "x";
+                                                                                                    e1 =   Lambda {
+                                                                                                      id = "x";
+                                                                                                      e1 =   Lambda {
+                                                                                                        id = "x";
+                                                                                                        e1 =   Lambda {
+                                                                                                          id = "x";
+                                                                                                          e1 =   Lambda {
+                                                                                                            id = "x";
+                                                                                                            e1 =   Lambda {
+                                                                                                              id = "x";
+                                                                                                              e1 = Lambda {
+                                                                                                                id = "x";
+                                                                                                                e1 =   Lambda {
+                                                                                                                  id = "x";
+                                                                                                                  e1 =   Lambda {
+                                                                                                                    id = "x";
+                                                                                                                    e1 =   Lambda {
+                                                                                                                      id = "x";
+                                                                                                                      e1 =   Lambda {
+                                                                                                                        id = "x";
+                                                                                                                        e1 =   Lambda {
+                                                                                                                          id = "x";
+                                                                                                                          e1 = Lambda {
+                                                                                                                            id = "x";
+                                                                                                                            e1 =   Lambda {
+                                                                                                                              id = "x";
+                                                                                                                              e1 =   Lambda {
+                                                                                                                                id = "x";
+                                                                                                                                e1 =   Lambda {
+                                                                                                                                  id = "x";
+                                                                                                                                  e1 =   Lambda {
+                                                                                                                                    id = "x";
+                                                                                                                                    e1 =   Lambda {
+                                                                                                                                      id = "x";
+                                                                                                                                      e1 = Lambda {
+                                                                                                                                        id = "x";
+                                                                                                                                        e1 =   Lambda {
+                                                                                                                                          id = "x";
+                                                                                                                                          e1 =   Lambda {
+                                                                                                                                            id = "x";
+                                                                                                                                            e1 =   Lambda {
+                                                                                                                                              id = "x";
+                                                                                                                                              e1 =   Lambda {
+                                                                                                                                                id = "x";
+                                                                                                                                                e1 =   Lambda {
+                                                                                                                                                  id = "x";
+                                                                                                                                                  e1 = Var "x"
+                                                                                                                                                }
+                                                                                                                                              }
+                                                                                                                                            }
+                                                                                                                                          }
+                                                                                                                                        }
+                                                                                                                                      }
+                                                                                                                                    }
+                                                                                                                                  }
+                                                                                                                                }
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          }
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    }
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              }
+                                                                                                            }
+                                                                                                          }
+                                                                                                        }
+                                                                                                      }
+                                                                                                    }
+                                                                                                  }
+                                                                                                }
+                                                                                              }
+                                                                                            }
+                                                                                          }
+                                                                                        }
+                                                                                      }
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              }
+                                                                            }
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                }
+                                                              }
+                                                            }
+                                                          }
+                                                        }
+                                                      }
+                                                    }
+                                                  }
+                                                }
+                                              }
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
 let debug_example =
   Let
     {
