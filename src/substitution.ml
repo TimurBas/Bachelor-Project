@@ -1,4 +1,4 @@
-open Types
+open Common.Types
 
 module TE = TypeEnv
 

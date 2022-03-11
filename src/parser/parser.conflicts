@@ -1,0 +1,140 @@
+
+** Conflict (shift/reduce) in state 23.
+** Tokens involved: STRING SND LPAREN LET INT ID FUN FST
+** The following explanations concentrate on token STRING.
+** This state is reached from program after reading:
+
+SND exp
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+exp EOF 
+(?)
+
+** In state 23, looking ahead at STRING, shifting is permitted
+** because of the following sub-derivation:
+
+SND exp 
+    exp exp 
+        . STRING 
+
+** In state 23, looking ahead at STRING, reducing production
+** exp -> SND exp
+** is permitted because of the following sub-derivation:
+
+exp exp // lookahead token appears because exp can begin with STRING
+SND exp . 
+
+** Conflict (shift/reduce) in state 18.
+** Tokens involved: STRING SND LPAREN LET INT ID FUN FST
+** The following explanations concentrate on token STRING.
+** This state is reached from program after reading:
+
+LET ID ASSIGN exp IN exp
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+exp EOF 
+(?)
+
+** In state 18, looking ahead at STRING, shifting is permitted
+** because of the following sub-derivation:
+
+LET ID ASSIGN exp IN exp 
+                     exp exp 
+                         . STRING 
+
+** In state 18, looking ahead at STRING, reducing production
+** exp -> LET ID ASSIGN exp IN exp
+** is permitted because of the following sub-derivation:
+
+exp exp // lookahead token appears because exp can begin with STRING
+LET ID ASSIGN exp IN exp . 
+
+** Conflict (shift/reduce) in state 15.
+** Tokens involved: STRING SND LPAREN LET INT ID FUN FST
+** The following explanations concentrate on token STRING.
+** This state is reached from program after reading:
+
+FUN STRING RARROW exp
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+exp EOF 
+(?)
+
+** In state 15, looking ahead at STRING, shifting is permitted
+** because of the following sub-derivation:
+
+FUN STRING RARROW exp 
+                  exp exp 
+                      . STRING 
+
+** In state 15, looking ahead at STRING, reducing production
+** exp -> FUN STRING RARROW exp
+** is permitted because of the following sub-derivation:
+
+exp exp // lookahead token appears because exp can begin with STRING
+FUN STRING RARROW exp . 
+
+** Conflict (shift/reduce) in state 14.
+** Tokens involved: STRING SND LPAREN LET INT ID FUN FST
+** The following explanations concentrate on token STRING.
+** This state is reached from program after reading:
+
+exp exp
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+exp EOF 
+(?)
+
+** In state 14, looking ahead at STRING, shifting is permitted
+** because of the following sub-derivation:
+
+exp exp 
+    exp exp 
+        . STRING 
+
+** In state 14, looking ahead at STRING, reducing production
+** exp -> exp exp
+** is permitted because of the following sub-derivation:
+
+exp exp // lookahead token appears because exp can begin with STRING
+exp exp . 
+
+** Conflict (shift/reduce) in state 13.
+** Tokens involved: STRING SND LPAREN LET INT ID FUN FST
+** The following explanations concentrate on token STRING.
+** This state is reached from program after reading:
+
+FST exp
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+exp EOF 
+(?)
+
+** In state 13, looking ahead at STRING, shifting is permitted
+** because of the following sub-derivation:
+
+FST exp 
+    exp exp 
+        . STRING 
+
+** In state 13, looking ahead at STRING, reducing production
+** exp -> FST exp
+** is permitted because of the following sub-derivation:
+
+exp exp // lookahead token appears because exp can begin with STRING
+FST exp . 

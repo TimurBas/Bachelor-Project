@@ -1,4 +1,4 @@
-open Ast
+open Common.Ast
 
 let non_polymporphic_id_example =
   Lambda

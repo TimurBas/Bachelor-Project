@@ -1,11 +1,15 @@
 open Src
-module A = Ast
-module T = Types
+
+module A = Common.Ast
+module T = Common.Types
 module TE = TypeEnv
 module S = Substitution
 module PR = PrettyPrinter
 module EX = Examples
 
+type phase = LEX | PARSE 
+
+exception ExitMain of phase
 exception Fail
 exception Impossible
 exception FailMessage of string
@@ -142,6 +146,31 @@ let run_example ast name =
   print_string (PR.string_of_tau tau);
   counter := 0;
   print_newline ()
+
+  let initLexer filename = 
+    let input = open_in filename in
+    let filebuf = Lexing.from_channel input in
+    filebuf.lex_curr_p <- { filebuf.lex_curr_p with pos_fname = filename };  
+    (input, filebuf)
+  
+  let parse file = 
+    let input, filebuf = initLexer file in 
+    let parseRes = 
+      try  Parser.program Lexer.token filebuf
+      with
+      | Lexer.Error msg -> Printf.eprintf "%s%!" msg; raise (ExitMain LEX)    
+      | Parser.Error ->  
+        let pos1 = Lexing.lexeme_start_p filebuf in
+        let pos2 = Lexing.lexeme_end_p filebuf in
+        let lexeme = Lexing.lexeme filebuf in
+        Printf.fprintf stderr "%s:%d:%d - %d:%d: syntax error '%s'\n"
+          pos1.pos_fname pos1.pos_lnum (pos1.pos_cnum - pos1.pos_bol)
+          pos2.pos_lnum (pos2.pos_cnum - pos2.pos_bol + 1)
+          lexeme;
+        raise (ExitMain PARSE)        
+    in 
+    close_in input;
+    parseRes
 
 let () =
   (* fun x -> fun y -> fun z -> z *)

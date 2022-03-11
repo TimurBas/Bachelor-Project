@@ -1,4 +1,4 @@
-open Types
+open Common.Types
 
 exception Impossible
 

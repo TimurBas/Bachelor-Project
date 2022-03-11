@@ -1,2 +1,3 @@
 (library
-  (name src))
+ (name src)
+ (libraries lexer parser common))
