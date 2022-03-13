@@ -11,6 +11,8 @@ exception Fail
 exception Impossible
 exception FailMessage of string
 
+let list_of_set s = List.of_seq (SS.to_seq s)
+
 let rec find_tyvars (tau : T.typ) : SS.t = match tau with
   | TyCon _ -> SS.empty
   | TyVar alpha -> SS.singleton alpha
@@ -57,33 +59,27 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
     match exp with
     | A.Var id -> (
         match TE.look_up id gamma with
+        | None -> raise Fail
         | Some (TypeScheme { tyvars; tau }) ->
-            let subst_bindings = List.map (fun tv -> (tv, T.TyVar (get_next_tyvar()))) (List.of_seq (SS.to_seq tyvars)) in
+            let subst_bindings = List.map (fun tv -> (tv, T.TyVar (get_next_tyvar()))) (list_of_set tyvars) in
             let subst = S.of_list subst_bindings in
-            (S.empty, S.apply subst tau)
-        | None -> raise Fail)
+            (S.empty, S.apply subst tau))
     | A.Lambda { id; e1 } ->
         let new_tyvar = get_next_tyvar () in
         let gamma_ext = TE.add_alpha id (TyVar new_tyvar) gamma in 
-        let s, tau = trav gamma_ext e1 in
-        let tau' =
-          match S.look_up new_tyvar s with
-          | Some typ -> typ
-          | None -> T.TyVar new_tyvar
-        in
-        (s, TyFunApp { t1 = tau'; t2 = tau })
+        let s1, tau1 = trav gamma_ext e1 in
+        (s1, TyFunApp { t1 = S.apply s1 (T.TyVar new_tyvar); t2 = tau1 })
     | A.App { e1; e2 } ->
         let s1, tau1 = trav gamma e1 in
-        let s1_applied_to_gamma = (S.apply_to_gamma s1 gamma) in 
-        let s2, tau2 = trav s1_applied_to_gamma e2 in
+        let s1_applied_to_gamma = (S.apply_to_gamma s1 gamma) in
+        let s2, tau2 = trav s1_applied_to_gamma e2 in (* infix operator for apply *)
         let new_tyvar = get_next_tyvar () in
-        let apply_s2_tau1 = S.apply s2 tau1 in 
-        let app_typ = T.TyFunApp { t1 = tau2; t2 = TyVar new_tyvar } in 
+        let apply_s2_tau1 = S.apply s2 tau1 in
+        let app_typ = T.TyFunApp { t1 = tau2; t2 = TyVar new_tyvar } in (* maybe infix operator for TyFunApp like an arrow *)
         let s3 =
           unify apply_s2_tau1 app_typ
         in
-        let apply_s3_to_new_tyvar= S.apply s3 (TyVar new_tyvar) in
-        (S.compose s3 (S.compose s2 s1), apply_s3_to_new_tyvar)
+        (S.compose s3 (S.compose s2 s1), S.apply s3 (TyVar new_tyvar)) (* infix operator for compose *)
     | A.Let { id; e1; e2 } ->
         let s1, tau1 = trav gamma e1 in
         let s1_gamma = S.apply_to_gamma s1 gamma in
