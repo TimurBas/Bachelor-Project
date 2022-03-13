@@ -5,48 +5,32 @@ module TE = TypeEnv
 module S = Substitution
 module PR = PrettyPrinter
 module EX = Examples
+module SS = Set.Make(Int)
 
 exception Fail
 exception Impossible
 exception FailMessage of string
 
-let remove_elt e l =
-  let rec remove l acc = match l with
-    | [] -> List.rev acc
-    | x::xs when e = x -> remove xs acc
-    | x::xs -> remove xs (x::acc)
-  in remove l []
-
-let remove_duplicates lst = 
-  let rec remove l acc = match l with
-    | [] -> List.rev acc
-    | x :: xs -> remove (remove_elt x xs) (x::acc)
-  in remove lst []
-
-let set_difference lst1 lst2 = List.filter (fun e -> not (List.mem e lst2)) lst1
-
-let rec find_tyvars (tau : T.typ) : T.tyvar list =
-  match tau with
-  | TyCon _ -> []
-  | TyVar alpha -> [ alpha ]
-  | TyFunApp { t1; t2 } -> find_tyvars t1 @ find_tyvars t2
-  | TyTuple { t1; t2 } -> find_tyvars t1 @ find_tyvars t2
+let rec find_tyvars (tau : T.typ) : SS.t = match tau with
+  | TyCon _ -> SS.empty
+  | TyVar alpha -> SS.singleton alpha
+  | TyFunApp { t1; t2 } -> SS.union (find_tyvars t1) (find_tyvars t2)
+  | TyTuple { t1; t2 } -> SS.union (find_tyvars t1) (find_tyvars t2)
 
 let find_free_tyvars (T.TypeScheme { tyvars; tau }) =
-  remove_duplicates (set_difference (find_tyvars tau) tyvars)
+  SS.diff (find_tyvars tau) tyvars
 
-let clos gamma typescheme =
-  let (T.TypeScheme { tau; _ }) = typescheme in
-  let free_tyvars_ts = find_free_tyvars typescheme in
-  let gammas_bindings = TE.bindings gamma in
-  let gammas_typeschemes = List.map (fun (_, v) -> v) gammas_bindings in
-  let free_tyvars_gamma = List.concat_map find_free_tyvars gammas_typeschemes in
-  let diff = set_difference free_tyvars_ts free_tyvars_gamma in 
+let clos (gamma : T.typescheme TE.Gamma.t) tau =
+  let free_tyvars_tau = find_free_tyvars (TE.wrap_monotype tau) in
+  let gamma_typeschemes = List.map (fun (_, v) -> v) (TE.bindings gamma) in
+  let free_tyvars_gamma = List.fold_left (fun acc elt -> SS.union acc (find_free_tyvars elt)) SS.empty gamma_typeschemes in
+  (* let free_tyvars_gamma = SS.of_list (List.concat_map (fun s -> SS.elements s) gamma_typeschemes) in *)
+  let diff = SS.diff free_tyvars_tau free_tyvars_gamma in 
   T.TypeScheme { tyvars = diff; tau }
 
-let occurs_check ty_var tau = 
+let occurs_check tyvar tau = 
   let free_tyvars = find_free_tyvars (TE.wrap_monotype tau) in 
-  if List.mem ty_var free_tyvars then raise (FailMessage "Recursive unification")
+  if SS.mem tyvar free_tyvars then raise (FailMessage "Recursive unification")
 
 let counter = ref 0
 
@@ -74,14 +58,9 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
     | A.Var id -> (
         match TE.look_up id gamma with
         | Some (TypeScheme { tyvars; tau }) ->
-            let new_tyvars = List.map (fun _ -> get_next_tyvar ()) tyvars in
-            let new_subst =
-              List.fold_left2
-                (fun s new_tv tv -> S.add tv (T.TyVar new_tv) s)
-                S.empty new_tyvars tyvars
-            in
-            let applied_subs_on_tau = S.apply new_subst tau in 
-            (S.empty, applied_subs_on_tau)
+            let subst_bindings = List.map (fun tv -> (tv, T.TyVar (get_next_tyvar()))) (List.of_seq (SS.to_seq tyvars)) in
+            let subst = S.of_list subst_bindings in
+            (S.empty, S.apply subst tau)
         | None -> raise Fail)
     | A.Lambda { id; e1 } ->
         let new_tyvar = get_next_tyvar () in
@@ -108,8 +87,8 @@ let algorithm_w (exp : A.exp) : S.map_type * T.typ =
     | A.Let { id; e1; e2 } ->
         let s1, tau1 = trav gamma e1 in
         let s1_gamma = S.apply_to_gamma s1 gamma in
-        let clos_s1_gamma_tau = clos s1_gamma (TE.wrap_monotype tau1) in
-        let gamma_ext = TE.add id clos_s1_gamma_tau gamma in
+        let clos_s1_gamma_tau1 = clos s1_gamma tau1 in
+        let gamma_ext = TE.add id clos_s1_gamma_tau1 s1_gamma in
         let s1_gamma_ext = S.apply_to_gamma s1 gamma_ext in
         let s2, tau2 = trav s1_gamma_ext e2 in
         (S.compose s2 s1, tau2)

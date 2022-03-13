@@ -17,7 +17,7 @@ let string_of_tau tau = trav_tau tau
 let print_tau tau = print_string (string_of_tau tau ^ "\n")
 
 let string_of_typescheme (TypeScheme { tyvars; tau }) =
-  let tyvars = String.concat ", " (List.map (fun x -> string_of_int x) tyvars) in
+  let tyvars = String.concat ", " (List.map (fun x -> string_of_int x) (SS.elements tyvars)) in
   "∀ " ^ tyvars ^ ". " ^ (string_of_tau tau)
 let print_typescheme typescheme = print_string (string_of_typescheme typescheme ^ "\n")
 
