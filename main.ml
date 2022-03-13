@@ -129,7 +129,7 @@ let () =
   run_example EX.polymorphic_id_example "Polymorphic_id_example \n";
   (* let id = fun x -> x in let both = fun y -> fun z -> id in let amk = fun x -> both in (amk, amk) *)
   run_example EX.nested_let_example "Nested_let_example \n";
-  (* fun x -> fun y -> x y  *)
+  (* fun x -> fun y -> x y *)
   run_example EX.fun_application_example "Fun_application_example \n";
   (* fun x -> fun y -> fun z -> z (x y) *)
   run_example EX.fun_application_three_example
@@ -147,7 +147,7 @@ let () =
   run_example EX.everything_example "Everything_example \n";
   (* fun x -> let y = fun w -> (w x) in fun u -> fun z -> (y u, y z) *)
   run_example EX.everything_example2 "Everything_example2 \n";
-  (* let id x = x in id 2 *)
+  (* let id = fun x -> x in let both = (id 2, id true) in both *)
   run_example EX.polymorphic_id_with_int_and_bool
     "Polymorphic_id_with_int_and_bool \n";
   (* 
