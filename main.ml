@@ -54,6 +54,22 @@ let get_next_tyvar () =
   counter := !counter + 1;
   !counter
 
+let new_tyvar: T.tyvar = 
+  counter := !counter +1;
+  ref (T.NoLink !counter)
+
+let rec find typ = 
+  match typ with
+  | T.TyVar tyvar -> 
+     (
+      match !tyvar with 
+      | LinkTo typ' -> find typ'
+      | _ -> typ
+     )
+  | _ -> typ
+
+let union n1 n2 = raise Fail
+
 let rec unify t1 t2 = 
   match t1, t2 with 
   | T.TyVar ty_var1, T.TyVar ty_var2 when ty_var1 = ty_var2 -> S.empty
