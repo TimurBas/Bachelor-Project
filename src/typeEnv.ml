@@ -8,7 +8,7 @@ module Gamma =
     let compare = compare
 end)
 
-let wrap_monotype tau = TypeScheme {tyvars=[]; tau}
+let wrap_monotype tau = TypeScheme {tyvars=SS.empty; tau}
 
 type map_type = typescheme Gamma.t
 

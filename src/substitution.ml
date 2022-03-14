@@ -46,3 +46,5 @@ let map m (t: map_type) = Substitution.map m t
 let union a b c = Substitution.union a b c
 let compose (s2: map_type) (s1: map_type) = union (fun _ _ v2 -> Some v2) s2 (map (fun v -> apply s2 v) s1)
 let bindings t = Substitution.bindings t
+let of_seq s = Substitution.of_seq s
+let of_list l = of_seq (List.to_seq l)
