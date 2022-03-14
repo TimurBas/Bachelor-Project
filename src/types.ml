@@ -1,11 +1,14 @@
 module SS = Set.Make(Int)
 
-type tyvar = int
+type level = int 
+type id = int
 
 type tycon =
 | Int
 | Bool
 | String
+
+type tyvar = id * level
 
 type typ = 
 | TyCon of tycon
