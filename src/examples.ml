@@ -543,10 +543,24 @@ let many_lambdas =
   }
 
 let debug_example =
-  Let
-    {
-      id = "id";
-      e1 = Lambda { id = "x"; e1 = Var "x" };
-      e2 = App { e1 = Var "id"; e2 = BasVal (Int 2) };
-    }
+  Let {
+        id = "pair";
+        e1 = Lambda {
+          id = "p";
+          e1 = Lambda {
+            id = "x";
+            e1 = Lambda {
+              id = "y";
+              e1 = App {
+                e1 = App {
+                  e1 = Var "p";
+                  e2 = Var "x";
+                };
+                e2 = Var "y"
+              }
+            }
+          }
+        };
+        e2 = Var "pair"
+  }
 

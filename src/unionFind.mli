@@ -1,6 +1,4 @@
-module UnionFind : sig
-  type 'a t
-  val make_set : 'a -> 'a t
-  val find : 'a t -> 'a
-  val union : 'a t -> 'a t -> f:('a -> 'a -> int) -> unit
-end
+type 'a node = {parent: 'a node option ref; data: 'a}
+val make_set : 'a -> 'a node
+val find : 'a node -> 'a node
+val union : 'a node -> 'a node -> ('a -> 'a -> int) -> unit
