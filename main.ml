@@ -14,25 +14,25 @@ exception FailMessage of string
 
 let list_of_set set = List.of_seq (SS.to_seq set)
 
-let rec find_tyvars (tau : typ UF.node) : SS.t = match tau.data with
+let rec find_tyvars (tau : typ UF.node) : SS.t = match tau with
   | TyCon _ -> SS.empty
   | TyVar alpha -> SS.singleton alpha
   | TyFunApp { t1; t2 } -> SS.union (find_tyvars t1) (find_tyvars t2)
   | TyTuple { t1; t2 } -> SS.union (find_tyvars t1) (find_tyvars t2)
 
-let find_free_tyvars (TypeScheme {tyvars; tau_node}) =
-  SS.diff (find_tyvars tau_node) tyvars
+let find_free_tyvars (TypeScheme {tyvars; tau}) =
+  SS.diff (find_tyvars tau) tyvars
 
-let clos (gamma : typescheme TE.Gamma.t) tau_node =
-  let free_tyvars_tau = find_free_tyvars (TE.wrap_monotype tau_node) in
+let clos (gamma : typescheme TE.Gamma.t) tau =
+  let free_tyvars_tau = find_free_tyvars (TE.wrap_monotype tau) in
   let gamma_typeschemes = List.map (fun (_, v) -> v) (TE.bindings gamma) in
   let free_tyvars_gamma = List.fold_left (fun acc elt -> SS.union acc (find_free_tyvars elt)) SS.empty gamma_typeschemes in
   (* let free_tyvars_gamma = SS.of_list (List.concat_map (fun s -> SS.elements s) gamma_typeschemes) in *)
   let diff = SS.diff free_tyvars_tau free_tyvars_gamma in 
-  TypeScheme { tyvars = diff; tau_node }
+  TypeScheme { tyvars = diff; tau }
 
-let occurs_check tyvar (tau_node: typescheme) = 
-  let free_tyvars = find_free_tyvars tau_node in 
+let occurs_check tyvar (tau: typescheme) = 
+  let free_tyvars = find_free_tyvars tau in 
   if SS.mem tyvar free_tyvars then raise (FailMessage "Recursive unification")
 
 let counter = ref 0
@@ -41,12 +41,12 @@ let get_next_tyvar () =
   counter := !counter + 1;
   !counter
 
-let rec unify (n1: typ UF.node) (n2: typ UF.node): unit =
-  match n1.data, n2.data with 
+let rec unify (t1: typ) (t2: typ): unit =
+  match t1, t2 with 
   | TyVar ty_var1, TyVar ty_var2 when ty_var1 = ty_var2 -> ()
-  | TyVar _, TyVar _ -> UF.union n1 n2 (fun _ _ -> 0)
-  | TyVar ty_var, _ -> occurs_check ty_var (TE.wrap_monotype n2); UF.union n1 n2 (fun _ _ -> 1)
-  | _, TyVar ty_var -> occurs_check ty_var (TE.wrap_monotype n1); UF.union n1 n2 (fun _ _ -> 0)
+  | TyVar n1, TyVar n2 -> UF.union n1 n2
+  | TyVar ty_var, _ -> occurs_check ty_var (TE.wrap_monotype n2); UF.union n1 n2
+  | _, TyVar ty_var -> occurs_check ty_var (TE.wrap_monotype n1); UF.union n1 n2
   | TyFunApp { t1 = t11; t2 = t12 }, TyFunApp { t1 = t21; t2 = t22 } 
   | TyTuple { t1 = t11; t2 = t12 }, TyTuple { t1 = t21; t2 = t22 } ->
     unify t11 t21;
@@ -54,10 +54,10 @@ let rec unify (n1: typ UF.node) (n2: typ UF.node): unit =
   | TyCon c1, TyCon c2 when c1 = c2 -> ()
   | _ -> raise Fail
 
-let specialize (TypeScheme{tyvars; tau_node}) =  
+let specialize (TypeScheme{tyvars; tau}) =  
   let bindings = List.map (fun tv -> (tv, get_next_tyvar())) (list_of_set tyvars) in
-  let rec subst_tyvars (tau: typ UF.node) =
-    match tau.data with
+  let rec subst_tyvars (tau: typ) =
+    match tau with
     | TyCon _ -> tau
     | TyVar tyvar -> (
       match List.assoc_opt tyvar bindings with
@@ -66,10 +66,10 @@ let specialize (TypeScheme{tyvars; tau_node}) =
     | TyFunApp {t1; t2} -> UF.make_set (TyFunApp {t1 = subst_tyvars t1; t2 = subst_tyvars t2})
     | TyTuple {t1; t2} -> UF.make_set (TyTuple {t1 = subst_tyvars t1; t2 = subst_tyvars t2})
   in
-  subst_tyvars tau_node
+  subst_tyvars tau
 
 let algorithm_w (exp : A.exp) : typ =
-  let rec trav (gamma : TE.map_type) exp : typ UF.node =
+  let rec trav (gamma : TE.map_type) exp : typ =
     match exp with
     | A.Var id -> (
         match TE.look_up id gamma with
@@ -77,18 +77,17 @@ let algorithm_w (exp : A.exp) : typ =
         | Some ts -> specialize ts)
     | A.Lambda { id; e1 } ->
         let new_node = UF.make_set (TyVar (get_next_tyvar())) in
-        let gamma_ext = TE.add_alpha id new_node gamma in 
+        let gamma_ext = TE.add_alpha id (UF.find(!(new_node))) gamma in 
         let tau1_node = trav gamma_ext e1 in
-        UF.make_set (TyFunApp {t1 = UF.find new_node; t2 = tau1_node})
+        TyFunApp {t1 = UF.find !new_node; t2 = tau1_node}
     | A.App { e1; e2 } ->
         let tau1_node = trav gamma e1 in
         let s1_applied_to_gamma = TE.update_typeschemes gamma in
         let tau2_node = trav s1_applied_to_gamma e2 in (* infix operator for apply *)
-        let new_tyvar_node = UF.make_set (TyVar (get_next_tyvar())) in
-        let apply_s2_tau1 = UF.find tau1_node in
-        let app_typ = UF.make_set (TyFunApp { t1 = tau2_node; t2 = new_tyvar_node }) in (* maybe infix operator for TyFunApp like an arrow *)
-        unify apply_s2_tau1 app_typ;
-        UF.find new_tyvar_node (* infix operator for compose *)
+        let new_tyvar_node = UF.make_set (get_next_tyvar()) in
+        let app_typ = TyFunApp { t1 = tau2_node; t2 = UF.find(!(new_tyvar_node)) } in (* maybe infix operator for TyFunApp like an arrow *)
+        unify tau1_node app_typ;
+        UF.find !new_tyvar_node (* infix operator for compose *)
     | A.Let { id; e1; e2 } ->
         let tau1_node = trav gamma e1 in
         let s1_gamma = TE.update_typeschemes gamma in
@@ -100,24 +99,20 @@ let algorithm_w (exp : A.exp) : typ =
     | A.Tuple { e1; e2 } ->
         let tau1_node = trav gamma e1 in
         let tau2_node = trav (TE.update_typeschemes gamma) e2 in
-        UF.make_set (TyTuple { t1 = tau1_node; t2 = tau2_node })
+        TyTuple { t1 = tau1_node; t2 = tau2_node }
     | A.Fst e1 -> (
         let tau1_node = trav gamma e1 in
-        match tau1_node.data with TyTuple { t1; _ } -> t1 | _ -> raise Fail)
+        match tau1_node with TyTuple { t1; _ } -> t1 | _ -> raise Fail)
     | A.Snd e1 -> (
         let tau1_node = trav gamma e1 in
-        match tau1_node.data with TyTuple { t2; _ } -> t2 | _ -> raise Fail)
-    | A.BasVal b -> (
+        match tau1_node with TyTuple { t2; _ } -> t2 | _ -> raise Fail)
+    | A.BasVal b ->
         match b with
-        | Int _ -> 
-          UF.make_set (TyCon Int)
-        | Bool _ -> 
-          UF.make_set (TyCon Bool)
-        | String _ -> 
-          UF.make_set (TyCon String))
+        | Int _ -> TyCon Int
+        | Bool _ -> TyCon Bool
+        | String _ -> TyCon String
   in
-  let final_node = trav TE.empty exp in 
-  final_node.data
+  trav TE.empty exp
 
 let run_example ast name =
   print_newline ();

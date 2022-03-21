@@ -6,15 +6,15 @@ type tycon =
 | Bool
 | String
 
-type tyvar = int
-
 type typ = 
 | TyCon of tycon
 | TyVar of tyvar
-| TyFunApp of {t1: typ UF.node; t2: typ UF.node}
-| TyTuple of {t1: typ UF.node; t2: typ UF.node}
+| TyFunApp of {t1: typ; t2: typ}
+| TyTuple of {t1: typ; t2: typ}
+
+and tyvar = int
 
 type typescheme = 
-| TypeScheme of {tyvars: SS.t; tau_node: typ UF.node}
+| TypeScheme of {tyvars: SS.t; tau: typ}
 
 type program_variable = string
