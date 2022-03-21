@@ -12,7 +12,7 @@ type typ =
 | TyFunApp of {t1: typ; t2: typ}
 | TyTuple of {t1: typ; t2: typ}
 
-and tyvar = int
+and tyvar = LinkTo of typ ref | Int of int
 
 type typescheme = 
 | TypeScheme of {tyvars: SS.t; tau: typ}
