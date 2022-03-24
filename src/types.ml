@@ -16,9 +16,6 @@ type typ =
 
 and typ_node = typ UF.t
 
-let ( => ) t1 t2 = UF.make_set (TyFunApp { t1; t2 })
-let ( ** ) t1 t2 = UF.make_set (TyTuple { t1; t2 })
-
 type typescheme = TypeScheme of {tyvars: SS.t; tau_node: typ_node}
 
 type program_variable = string

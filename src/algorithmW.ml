@@ -51,7 +51,7 @@ let specialize (TypeScheme{tyvars; tau_node}) =
   subst_tyvars tau_node
 
 let infer_type (exp : A.exp) : typ_node =
-  let rec w (gamma : TE.map_type) exp : typ_node =
+  let rec w (gamma : TE.ts_map) exp : typ_node =
     match exp with
     | A.Var id -> (
         match TE.look_up id gamma with
