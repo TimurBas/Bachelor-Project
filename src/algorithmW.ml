@@ -15,7 +15,7 @@ let find_free_tyvars (TypeScheme {tyvars; tau_node}) =
   SS.diff (find_tyvars tau_node) tyvars
 
 let clos (gamma : typescheme TE.Gamma.t) tau_node =
-  let free_tyvars_tau = find_free_tyvars (~$tau_node) in
+  let free_tyvars_tau = find_free_tyvars (!$tau_node) in
   let free_tyvars_gamma = combine_sets (List.map (fun (_, v) -> find_free_tyvars v) (TE.bindings gamma)) in 
   TypeScheme { tyvars = SS.diff free_tyvars_tau free_tyvars_gamma; tau_node }
 
@@ -27,8 +27,8 @@ let rec unify (t1: typ_node) (t2: typ_node): unit =
   match UF.find t1, UF.find t2 with
   | TyCon c1, TyCon c2 -> if c1 = c2 then () else raise (Fail "cannot unify")
   | TyVar ty_var1, TyVar ty_var2 -> if ty_var1 = ty_var2 then () else UF.union t1 t2
-  | TyVar ty_var, _ -> occurs_check ty_var ~$t2; UF.union t1 t2
-  | _, TyVar ty_var -> occurs_check ty_var ~$t1; UF.union t1 t2 (* maybe other way around? *)
+  | TyVar ty_var, _ -> occurs_check ty_var !$t2; UF.union t1 t2
+  | _, TyVar ty_var -> occurs_check ty_var !$t1; UF.union t1 t2 (* maybe other way around? *)
   | TyFunApp { t1 = t11; t2 = t12 }, TyFunApp { t1 = t21; t2 = t22 }
   | TyTuple { t1 = t11; t2 = t12 }, TyTuple { t1 = t21; t2 = t22 } ->
       unify t11 t21;
@@ -59,7 +59,7 @@ let infer_type (exp : A.exp) : typ_node =
         | Some ts -> specialize ts)
     | A.Lambda { id; e1 } ->
         let alpha = new_node () in
-        let tau1_node = w (gamma +- (id, ~$alpha)) e1 in
+        let tau1_node = w (gamma +- (id, !$alpha)) e1 in
         ~%alpha => tau1_node
     | A.App { e1; e2 } ->
         let tau1_node = w gamma e1 in
