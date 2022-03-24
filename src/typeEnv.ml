@@ -32,3 +32,9 @@ let update_typescheme (TypeScheme {tyvars; tau_node}) =
   TypeScheme {tyvars; tau_node = UF.root tau_node}
 
 let update_typeschemes t = map update_typescheme t
+
+let counter = ref 0
+let get_next_tyvar () =
+  counter := !counter + 1;
+  !counter
+let reset () = counter := 0
