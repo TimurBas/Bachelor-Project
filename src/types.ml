@@ -6,15 +6,19 @@ type tycon =
 | Bool
 | String
 
+type tyvar = int
+
 type typ = 
 | TyCon of tycon
 | TyVar of tyvar
-| TyFunApp of {t1: typ; t2: typ}
-| TyTuple of {t1: typ; t2: typ}
+| TyFunApp of {t1: typ_node; t2: typ_node}
+| TyTuple of {t1: typ_node; t2: typ_node}
 
-and tyvar = LinkTo of typ ref | Int of int
+and typ_node = typ UF.t
 
-type typescheme = 
-| TypeScheme of {tyvars: SS.t; tau: typ}
+let ( => ) t1 t2 = UF.make_set (TyFunApp { t1; t2 })
+let ( ** ) t1 t2 = UF.make_set (TyTuple { t1; t2 })
+
+type typescheme = TypeScheme of {tyvars: SS.t; tau_node: typ_node}
 
 type program_variable = string

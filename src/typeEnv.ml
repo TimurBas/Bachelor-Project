@@ -8,7 +8,7 @@ module Gamma =
     let compare = compare
 end)
 
-let wrap_monotype tau  = TypeScheme {tyvars=SS.empty; tau }
+let wrap_monotype tau_node = TypeScheme {tyvars=SS.empty; tau_node}
 
 type map_type = typescheme Gamma.t
 
@@ -27,8 +27,8 @@ let remove k t: map_type = Gamma.remove k t
 let bindings t = Gamma.bindings t
 
 let map m (t: map_type) = Gamma.map m t
-let update_typeschemes t = 
-  map (fun (TypeScheme{tyvars; tau} as ts) -> 
-    match tau with 
-      | TyVar node -> TypeScheme {tyvars; tau = UF.find node}
-      | _ -> ts) t
+
+let update_typescheme (TypeScheme {tyvars; tau_node}) =
+  TypeScheme {tyvars; tau_node = UF.root tau_node}
+
+let update_typeschemes t = map update_typescheme t
