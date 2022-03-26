@@ -3,90 +3,97 @@ open Utils
 
 module A = Ast
 
-exception Fail of string
-
-let rec find_tyvars (tau_node : typ_node) : SS.t = match UF.find tau_node with
+let rec find_tyvars (tau : typ) : SS.t = match ~%tau with
   | TyCon _ -> SS.empty
-  | TyVar alpha -> SS.singleton alpha
+  | TyVar {contents = Link t} -> find_tyvars t
+  | TyVar {contents = Int alpha} -> SS.singleton alpha
   | TyFunApp { t1; t2 } -> SS.union (find_tyvars t1) (find_tyvars t2)
   | TyTuple { t1; t2 } -> SS.union (find_tyvars t1) (find_tyvars t2)
 
-let find_free_tyvars (TypeScheme {tyvars; tau_node}) =
-  SS.diff (find_tyvars tau_node) tyvars
+let find_free_tyvars (TypeScheme {tyvars; tau}) =
+  SS.diff (find_tyvars tau) tyvars
 
-let clos (gamma : typescheme TE.Gamma.t) tau_node =
-  let free_tyvars_tau = find_free_tyvars (!$tau_node) in
+let clos (gamma : typescheme TE.Gamma.t) tau =
+  let free_tyvars_tau = find_free_tyvars (!$tau) in
   let free_tyvars_gamma = combine_sets (List.map (fun (_, v) -> find_free_tyvars v) (TE.bindings gamma)) in 
-  TypeScheme { tyvars = SS.diff free_tyvars_tau free_tyvars_gamma; tau_node }
+  TypeScheme { tyvars = SS.diff free_tyvars_tau free_tyvars_gamma; tau }
 
-let occurs_check tyvar (tau: typescheme) = 
+let occurs_check tyvar (tau: typescheme) =
   if SS.mem tyvar (find_free_tyvars tau) then raise (Fail "recursive unification")
 
-let rec unify (t1: typ_node) (t2: typ_node): unit =
+let rec unify (t1: typ) (t2: typ): unit =
   let t1, t2 = ~%t1, ~%t2 in
-  match UF.find t1, UF.find t2 with
+  match t1, t2 with
   | TyCon c1, TyCon c2 -> if c1 = c2 then () else raise (Fail "cannot unify")
-  | TyVar ty_var1, TyVar ty_var2 -> if ty_var1 = ty_var2 then () else UF.union t1 t2
-  | TyVar ty_var, _ -> occurs_check ty_var !$t2; UF.union t1 t2
-  | _, TyVar ty_var -> occurs_check ty_var !$t1; UF.union t1 t2 (* maybe other way around? *)
+  | TyVar tv1, TyVar tv2 -> if tv1 = tv2 then () else union tv1 t2
+  | TyVar ({contents = Int i} as tv), _ -> occurs_check i !$t2; union tv t2
+  | _, TyVar ({contents = Int i} as tv) -> occurs_check i !$t1; union tv t2
   | TyFunApp { t1 = t11; t2 = t12 }, TyFunApp { t1 = t21; t2 = t22 }
   | TyTuple { t1 = t11; t2 = t12 }, TyTuple { t1 = t21; t2 = t22 } ->
       unify t11 t21;
-      unify ~%t12 ~%t22
+      unify t12 t22
   | _ -> raise (Fail "unify _ case")
 
-let specialize (TypeScheme{tyvars; tau_node}) =  
+let specialize (TypeScheme{tyvars; tau}) =
   let bindings = List.map (fun tv -> (tv, TE.get_next_tyvar())) (list_of_set tyvars) in
-  let rec subst_tyvars (tau_node: typ_node) =
-    let tau_node = ~%tau_node in
-    match UF.find tau_node with
-    | TyCon _ -> tau_node
-    | TyVar tyvar -> (
-      match List.assoc_opt tyvar bindings with
-      | Some res -> UF.make_set (TyVar res)
-      | None -> tau_node)
-    | TyFunApp {t1; t2} -> UF.make_set (TyFunApp {t1 = subst_tyvars t1; t2 = subst_tyvars t2})
-    | TyTuple {t1; t2} -> UF.make_set (TyTuple {t1 = subst_tyvars t1; t2 = subst_tyvars t2})
+  let rec subst_tyvars (tau: typ) =
+    let tau = ~%tau in
+    match tau with
+    | TyCon _ -> tau
+    | TyVar {contents = Int i} -> (
+      match List.assoc_opt i bindings with
+      | Some res -> TyVar (ref (Int res))
+      | None -> tau)
+    | TyVar _ -> raise (Fail "specialize")
+    | TyFunApp {t1; t2} -> subst_tyvars t1 => subst_tyvars t2
+    | TyTuple {t1; t2} -> subst_tyvars t1 ** subst_tyvars t2
   in
-  subst_tyvars tau_node
+  subst_tyvars tau
 
-let infer_type (exp : A.exp) : typ_node =
-  let rec w (gamma : TE.ts_map) exp : typ_node =
+let infer_type (exp : A.exp) : typ =
+  let rec w (gamma : TE.ts_map) exp : typ =
     match exp with
     | A.Var id -> (
+        print_string "id\n";
         match TE.look_up id gamma with
         | None -> raise (Fail "id not in type environment")
         | Some ts -> specialize ts)
     | A.Lambda { id; e1 } ->
-        let alpha = new_node () in
-        let tau1_node = w (gamma +- (id, !$alpha)) e1 in
-        ~%alpha => tau1_node
+        print_string "lambda\n";
+        let alpha = new_tyvar () in
+        let tau1 = w (gamma +- (id, !$alpha)) e1 in
+        ~%alpha => tau1
     | A.App { e1; e2 } ->
-        let tau1_node = w gamma e1 in
-        let tau2_node = w ~&gamma e2 in
-        let alpha = new_node () in
-        unify ~%tau1_node (tau2_node => alpha);
+        print_string "app\n";
+        let tau1 = w gamma e1 in
+        let tau2 = w ~&gamma e2 in
+        let alpha = new_tyvar () in
+        unify ~%tau1 (tau2 => alpha);
         ~%alpha
     | A.Let { id; e1; e2 } ->
-        let tau1_node = w gamma e1 in
+        print_string "let\n";
+        let tau1 = w gamma e1 in
         let s1_gamma = ~&gamma in
-        let tau2_node = w (s1_gamma +- (id, clos s1_gamma tau1_node)) e2 in
-        tau2_node
+        let tau2 = w (s1_gamma +- (id, clos s1_gamma tau1)) e2 in
+        tau2
     | A.Tuple { e1; e2 } ->
-        let tau1_node = w gamma e1 in
-        let tau2_node = w ~&gamma e2 in
-        tau1_node ** tau2_node
+        print_string "tuple\n";
+        let tau1 = w gamma e1 in
+        let tau2 = w ~&gamma e2 in
+        tau1 ** tau2
     | A.Fst e1 -> (
-        let tau1_node = w gamma e1 in
-        match UF.find tau1_node with TyTuple { t1; _ } -> t1 | _ -> raise (Fail "expected tuple"))
+        print_string "fst\n";
+        let tau1 = w gamma e1 in
+        match ~%tau1 with TyTuple { t1; _ } -> t1 | _ -> raise (Fail "expected tuple"))
     | A.Snd e1 -> (
-        let tau1_node = w gamma e1 in
-        match UF.find tau1_node with TyTuple { t2; _ } -> t2 | _ -> raise (Fail "expected tuple"))
+        print_string "snd\n";
+        let tau1 = w gamma e1 in
+        match ~%tau1 with TyTuple { t2; _ } -> t2 | _ -> raise (Fail "expected tuple"))
     | A.BasVal b ->
-        UF.make_set (
-          match b with
-          | Int _ -> TyCon Int
-          | Bool _ -> TyCon Bool
-          | String _ -> TyCon String)
+        print_string "basval\n";
+        match b with
+        | Int _ -> TyCon Int
+        | Bool _ -> TyCon Bool
+        | String _ -> TyCon String
   in
   w TE.empty exp

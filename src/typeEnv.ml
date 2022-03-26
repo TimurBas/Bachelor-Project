@@ -8,7 +8,7 @@ end)
 
 type ts_map = typescheme Gamma.t
 
-let wrap_monotype tau_node = TypeScheme {tyvars=SS.empty; tau_node}
+let wrap_monotype tau = TypeScheme {tyvars=SS.empty; tau}
 
 let empty = Gamma.empty
 
@@ -22,8 +22,8 @@ let bindings t = Gamma.bindings t
 
 let map m t = Gamma.map m t
 
-let update_typescheme (TypeScheme {tyvars; tau_node}) =
-  TypeScheme {tyvars; tau_node = UF.root tau_node}
+let update_typescheme (TypeScheme {tyvars; tau}) =
+  TypeScheme {tyvars; tau = find tau}
 let update_typeschemes t = map update_typescheme t
 
 let counter = ref 0

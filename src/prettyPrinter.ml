@@ -1,14 +1,14 @@
 open Types
 open TypeEnv
+open Utils
 
-exception Fail
-
-let string_of_tau_node tau_node =
+let string_of_tau tau_node =
   let rec trav tau = 
-    match UF.find tau with
+    match ~%tau with
     | TyCon s -> (
         match s with Int -> "int" | Bool -> "bool" | String -> "string"), 0
-    | TyVar i -> string_of_int i, 0
+        | TyVar {contents = Int i} -> string_of_int i, 0
+        | TyVar _ -> raise (Fail "string_of_tau tyvar link")
     | TyFunApp { t1; t2 } ->
         let a1, a2 = trav t1 in
         let b1, b2 = trav t2 in
@@ -24,11 +24,11 @@ let string_of_tau_node tau_node =
   in
   fst (trav tau_node)
 
-let print_tau_node tau = print_string (string_of_tau_node tau ^ "\n")
+let print_tau_node tau = print_string (string_of_tau tau ^ "\n")
 
-let string_of_typescheme (TypeScheme { tyvars; tau_node }) =
+let string_of_typescheme (TypeScheme { tyvars; tau }) =
   let tyvars = String.concat ", " (List.map (fun x -> string_of_int x) (SS.elements tyvars)) in
-  "∀ " ^ tyvars ^ " . " ^ (string_of_tau_node tau_node)
+  "∀ " ^ tyvars ^ " . " ^ (string_of_tau tau)
 let print_typescheme typescheme = print_string (string_of_typescheme typescheme ^ "\n")
 
 let string_of_tyvars tyvars = 
@@ -38,5 +38,5 @@ let print_tyvars msg tyvars = print_string (msg ^ string_of_tyvars tyvars ^ "\n"
 
 let string_of_gamma gamma = 
   let elems = String.concat ", " (List.map (fun (k, v) -> k ^ " -> " ^ string_of_typescheme v) (Gamma.bindings gamma)) in
-  "{" ^ elems ^ "}"
+  "{ " ^ elems ^ " }"
 let print_gamma gamma = print_string (string_of_gamma gamma ^ "\n")
