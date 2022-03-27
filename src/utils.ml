@@ -10,5 +10,4 @@ let ( !$ ) t = TE.wrap_monotype t
 let ( => ) t1 t2 = TyFunApp { t1; t2 }
 let ( ** ) t1 t2 = TyTuple { t1; t2 }
 
-let list_of_set set = List.of_seq (SS.to_seq set)
 let combine_sets sets = List.fold_left (fun a b -> SS.union a b) SS.empty sets
