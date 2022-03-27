@@ -27,7 +27,7 @@ let rec unify t1 t2 =
   | TyCon c1, TyCon c2 -> if c1 = c2 then () else raise (Fail "cannot unify")
   | TyVar tv1, TyVar tv2 -> if tv1 = tv2 then () else union tv1 t2
   | TyVar ({contents = Int i} as tv), _ -> occurs_check i !$t2; union tv t2
-  | _, TyVar ({contents = Int i} as tv) -> occurs_check i !$t1; union tv t2
+  | _, TyVar ({contents = Int i} as tv) -> occurs_check i !$t1; union tv t1
   | TyFunApp { t1 = t11; t2 = t12 }, TyFunApp { t1 = t21; t2 = t22 }
   | TyTuple { t1 = t11; t2 = t12 }, TyTuple { t1 = t21; t2 = t22 } ->
       unify t11 t21;
