@@ -4,7 +4,7 @@ open Utils
 
 let string_of_tau tau_node =
   let rec trav tau = 
-    match ~%tau with
+    match ~$tau with
     | TyCon s -> (
         match s with Int -> "int" | Bool -> "bool" | String -> "string"), 0
         | TyVar {contents = Int i} -> string_of_int i, 0
