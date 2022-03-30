@@ -7,8 +7,8 @@ let string_of_tau tau_node =
     match ~$tau with
     | TyCon s -> (
         match s with Int -> "int" | Bool -> "bool" | String -> "string"), 0
-        | TyVar {contents = Int i} -> string_of_int i, 0
-        | TyVar _ -> raise (Fail "string_of_tau tyvar link")
+    | TyVar {contents = Int i} -> string_of_int i, 0
+    | TyVar _ -> raise (Fail "string_of_tau tyvar link")
     | TyFunApp { t1; t2 } ->
         let a1, a2 = trav t1 in
         let b1, b2 = trav t2 in

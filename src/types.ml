@@ -19,11 +19,23 @@ type typescheme = TypeScheme of {tyvars: SS.t; tau: typ}
 
 type program_variable = string
 
-let rec find typ = match typ with
+(* let rec find typ = match typ with
   | TyCon _ -> typ
   | TyVar {contents = Link t} -> find t
   | TyVar _ -> typ
   | TyFunApp {t1; t2} -> TyFunApp {t1 = find t1; t2 = find t2}
-  | TyTuple {t1; t2} -> TyTuple {t1 = find t1; t2 = find t2}
+  | TyTuple {t1; t2} -> TyTuple {t1 = find t1; t2 = find t2} *)
+
+  let rec find typ: typ = match typ with
+  | TyVar kind -> 
+    (
+      match !kind with 
+      | Int _ -> typ 
+      | Link t -> 
+        let root = find t in 
+        kind := Link root;
+        root
+    )
+  | _ -> typ
 
 let union tv t = tv := Link t
