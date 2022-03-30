@@ -13,7 +13,7 @@ let run_example ast name =
 
 let () =
   (* fun x -> fun y -> fun z -> z *)
-  run_example EX.non_polymporphic_id_example "Non_polymporphic_id_example \n";
+  run_example EX.non_polymorphic_id_example "Non_polymporphic_id_example \n";
   (* let id = fun x -> x in id *)
   run_example EX.polymorphic_id_example "Polymorphic_id_example \n";
   (* let id = fun x -> x in let both = fun y -> fun z -> id in let amk = fun x -> both in (amk, amk) *)

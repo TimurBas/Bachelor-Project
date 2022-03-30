@@ -34,14 +34,14 @@ let rec unify t1 t2 =
   | _ -> raise (Fail "unify _ case")
 
 let specialize (TypeScheme{tyvars; tau}) =
-  let bindings = List.map (fun tv -> (tv, TE.get_next_tyvar())) (SS.elements tyvars) in
+  let bindings = List.map (fun tv -> (tv, new_tyvar())) (SS.elements tyvars) in
   let rec subst_tyvars tau =
     let tau = ~$tau in
     match tau with
     | TyCon _ -> tau
     | TyVar {contents = Int i} -> (
       match List.assoc_opt i bindings with
-      | Some res -> TyVar (ref (Int res))
+      | Some res -> res
       | None -> tau)
     | TyVar _ -> raise (Fail "specialize link")
     | TyFunApp {t1; t2} -> subst_tyvars t1 => subst_tyvars t2

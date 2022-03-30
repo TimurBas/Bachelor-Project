@@ -1,6 +1,6 @@
 open Ast
 
-let non_polymporphic_id_example =
+let non_polymorphic_id_example =
   Lambda
     {
       id = "x";
