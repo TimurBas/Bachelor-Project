@@ -4,7 +4,6 @@ module TE = TypeEnv
 
 let new_tyvar () = TyVar (ref (Int (TE.get_next_tyvar())))
 let ( ~$ ) t = find t
-let ( ~% ) gamma = TE.update_typeschemes gamma
 let ( +- ) gamma (id, ts) = TE.add id ts gamma
 let ( !& ) t = TE.wrap_monotype t
 let ( => ) t1 t2 = TyFunApp { t1; t2 }

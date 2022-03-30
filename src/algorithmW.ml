@@ -62,18 +62,18 @@ let infer_type exp =
         ~$alpha => tau1
     | A.App { e1; e2 } ->
         let tau1 = w gamma e1 in
-        let tau2 = w ~%gamma e2 in
+        let tau2 = w gamma e2 in
         let alpha = new_tyvar () in
         unify ~$tau1 (tau2 => alpha);
         ~$alpha
     | A.Let { id; e1; e2 } ->
         let tau1 = w gamma e1 in
-        let s1_gamma = ~%gamma in
+        let s1_gamma = gamma in
         let tau2 = w (s1_gamma +- (id, clos s1_gamma tau1)) e2 in
         tau2
     | A.Tuple { e1; e2 } ->
         let tau1 = w gamma e1 in
-        let tau2 = w ~%gamma e2 in
+        let tau2 = w gamma e2 in
         tau1 ** tau2
     | A.Fst e1 -> (
         let tau1 = w gamma e1 in
