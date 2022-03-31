@@ -34,7 +34,7 @@ let print_typescheme typescheme = print_string (string_of_typescheme typescheme 
 let string_of_tyvars tyvars = 
   let elems = String.concat ", " (List.map (fun x -> string_of_int x) tyvars) in
   "{ " ^ elems ^ " }"
-let print_tyvars msg tyvars = print_string (msg ^ string_of_tyvars tyvars ^ "\n")
+let print_tyvars tyvars = print_string (string_of_tyvars tyvars ^ "\n")
 
 let string_of_gamma gamma = 
   let elems = String.concat ", " (List.map (fun (k, v) -> k ^ " -> " ^ string_of_typescheme v) (Gamma.bindings gamma)) in

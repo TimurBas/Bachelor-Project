@@ -39,10 +39,7 @@ let specialize (TypeScheme{tyvars; tau}) =
     let tau = ~$tau in
     match tau with
     | TyCon _ -> tau
-    | TyVar {contents = Int i} -> (
-      match List.assoc_opt i bindings with
-      | Some res -> res
-      | None -> tau)
+    | TyVar {contents = Int i} -> assoc_or_else bindings i ~default:tau
     | TyVar _ -> raise (Fail "specialize link")
     | TyFunApp {t1; t2} -> subst_tyvars t1 => subst_tyvars t2
     | TyTuple {t1; t2} -> subst_tyvars t1 ** subst_tyvars t2

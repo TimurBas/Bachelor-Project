@@ -19,6 +19,7 @@ type typescheme = TypeScheme of {tyvars: SS.t; tau: typ}
 
 type program_variable = string
 
+(* Union-find *)
 let rec find typ: typ = match typ with
 | TyVar ({contents = Link t} as kind) ->
   let root = find t in
