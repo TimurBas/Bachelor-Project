@@ -1,14 +1,12 @@
 open Types
 open TypeEnv
-open Utils
 
 let string_of_tau tau_node =
   let rec trav tau = 
-    match ~$tau with
+    match tau with
     | TyCon s -> (
         match s with Int -> "int" | Bool -> "bool" | String -> "string"), 0
-    | TyVar {contents = Int i} -> string_of_int i, 0
-    | TyVar _ -> raise (Fail "string_of_tau tyvar link")
+    | TyVar i -> string_of_int i, 0
     | TyFunApp { t1; t2 } ->
         let a1, a2 = trav t1 in
         let b1, b2 = trav t2 in
@@ -24,7 +22,7 @@ let string_of_tau tau_node =
   in
   fst (trav tau_node)
 
-let print_tau_node tau = print_string (string_of_tau tau ^ "\n")
+let print_tau tau = print_string (string_of_tau tau ^ "\n")
 
 let string_of_typescheme (TypeScheme { tyvars; tau }) =
   let tyvars = String.concat ", " (List.map (fun x -> string_of_int x) (SS.elements tyvars)) in
