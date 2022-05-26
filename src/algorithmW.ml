@@ -14,19 +14,19 @@ let find_free_tyvars (TypeScheme {tyvars; tau}) =
   SS.diff (find_tyvars tau) tyvars
 
 let clos gamma tau =
-  let free_tyvars_tau = find_free_tyvars (!&tau) in
+  let free_tyvars_tau = find_tyvars tau in
   let free_tyvars_gamma = combine_sets (List.map (fun (_, v) -> find_free_tyvars v) (TE.bindings gamma)) in 
   TypeScheme { tyvars = SS.diff free_tyvars_tau free_tyvars_gamma; tau }
 
 let occurs_check tyvar tau =
-  if SS.mem tyvar (find_free_tyvars tau) then raise (Fail "recursive unification")
+  if SS.mem tyvar (find_tyvars tau) then raise (Fail "recursive unification")
 
 let rec unify t1 t2 =
   match t1, t2 with
   | TyCon c1, TyCon c2 -> if c1 = c2 then S.empty else raise (Fail "cannot unify")
-  | TyVar tv1, TyVar tv2 -> if tv1 = tv2 then S.empty else S.add tv1 (TyVar tv2) S.empty
-  | TyVar tv, _ -> occurs_check tv !&t2; S.add tv t2 S.empty
-  | _, TyVar tv -> occurs_check tv !&t1; S.add tv t1 S.empty
+  | TyVar tv1, TyVar tv2 -> if tv1 = tv2 then S.empty else S.add tv1 t2 S.empty
+  | TyVar tv, _ -> occurs_check tv t2; S.add tv t2 S.empty
+  | _, TyVar tv -> occurs_check tv t1; S.add tv t1 S.empty
   | TyFunApp { t1 = t11; t2 = t12 }, TyFunApp { t1 = t21; t2 = t22 }
   | TyTuple { t1 = t11; t2 = t12 }, TyTuple { t1 = t21; t2 = t22 } ->
     let s1 = unify t11 t21 in
