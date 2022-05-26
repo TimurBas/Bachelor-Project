@@ -24,7 +24,7 @@ let string_of_tau tau_node =
   in
   fst (trav tau_node)
 
-let print_tau_node tau = print_string (string_of_tau tau ^ "\n")
+let print_tau tau = print_string (string_of_tau tau ^ "\n")
 
 let string_of_typescheme (TypeScheme { tyvars; tau }) =
   let tyvars = String.concat ", " (List.map (fun x -> string_of_int x) (SS.elements tyvars)) in

@@ -8,7 +8,7 @@ module AW = AlgorithmW
 let run_example ast name =
   print_newline ();
   print_string name;
-  PR.print_tau_node (AW.infer_type ast);
+  PR.print_tau (AW.infer_type ast);
   TE.reset ()
 
 let () =

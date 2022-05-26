@@ -19,14 +19,14 @@ let clos gamma tau =
   TypeScheme { tyvars = SS.diff free_tyvars_tau free_tyvars_gamma; tau }
 
 let occurs_check tyvar tau =
-  if SS.mem tyvar (find_free_tyvars tau) then raise (Fail "recursive unification")
+  if SS.mem tyvar (find_tyvars tau) then raise (Fail "recursive unification")
 
 let rec unify t1 t2 =
   match t1, t2 with
   | TyCon c1, TyCon c2 -> if c1 = c2 then () else raise (Fail "cannot unify")
   | TyVar tv1, TyVar tv2 -> if tv1 = tv2 then () else union tv1 t2
-  | TyVar ({contents = Int i} as tv), _ -> occurs_check i !&t2; union tv t2
-  | _, TyVar ({contents = Int i} as tv) -> occurs_check i !&t1; union tv t1
+  | TyVar ({contents = Int i} as tv), _ -> occurs_check i t2; union tv t2
+  | _, TyVar ({contents = Int i} as tv) -> occurs_check i t1; union tv t1
   | TyFunApp { t1 = t11; t2 = t12 }, TyFunApp { t1 = t21; t2 = t22 }
   | TyTuple { t1 = t11; t2 = t12 }, TyTuple { t1 = t21; t2 = t22 } ->
       unify ~$t11 ~$t21;
