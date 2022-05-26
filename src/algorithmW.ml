@@ -14,7 +14,7 @@ let find_free_tyvars (TypeScheme {tyvars; tau}) =
   SS.diff (find_tyvars tau) tyvars
 
 let clos gamma tau =
-  let free_tyvars_tau = find_free_tyvars (!&tau) in
+  let free_tyvars_tau = find_tyvars tau in
   let free_tyvars_gamma = combine_sets (List.map (fun (_, v) -> find_free_tyvars v) (TE.bindings gamma)) in 
   TypeScheme { tyvars = SS.diff free_tyvars_tau free_tyvars_gamma; tau }
 
