@@ -73,10 +73,10 @@ let infer_type exp =
         tau1 ** tau2
     | A.Fst e1 -> (
         let tau1 = w gamma e1 in
-        match ~$tau1 with TyTuple { t1; _ } -> t1 | _ -> raise (Fail "expected tuple"))
+        match tau1 with TyTuple { t1; _ } -> t1 | _ -> raise (Fail "expected tuple"))
     | A.Snd e1 -> (
         let tau1 = w gamma e1 in
-        match ~$tau1 with TyTuple { t2; _ } -> t2 | _ -> raise (Fail "expected tuple"))
+        match tau1 with TyTuple { t2; _ } -> t2 | _ -> raise (Fail "expected tuple"))
     | A.BasVal b ->
         match b with
         | Int _ -> TyCon Int
